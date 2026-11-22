@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795355380330,
+  "updatedAt": 1795355390730,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -437,7 +437,7 @@
     },
     {
       "id": "food-1795354307268-vsmm",
-      "name": "泡菜",
+      "name": "泡菜（冰箱）",
       "category": "罐頭/調理包",
       "expiryDate": "2026-10-20",
       "stockCount": 1,
