@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795355442759,
+  "updatedAt": 1795355452542,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -61,7 +61,7 @@
     },
     {
       "id": "food-1795352200039-ws51",
-      "name": "滿漢大餐蔥燒牛肉麵泡麵",
+      "name": "滿漢大餐蔥燒牛肉麵泡麵（抽屜櫃1）",
       "category": "泡麵/麵食",
       "expiryDate": "2026-11-10",
       "stockCount": 1,
