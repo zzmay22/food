@@ -314,6 +314,44 @@
     </div>
   </div>
 
+  <!-- ==================== 存放地點編輯管理刪除 Modal ==================== -->
+  <div id="locationManagerModal" class="fixed inset-0 bg-[#23415A]/45 z-50 hidden items-center justify-center p-3">
+    <div class="ehon-box bg-[#F7FBFF] w-full max-w-md max-h-[88vh] flex flex-col p-4 animate-pop">
+      <div class="flex items-center justify-between pb-2 mb-2.5 border-b-[3px] border-[#23415A]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#9AD9F5] border-2 border-[#23415A]"></span>
+          <h3 class="text-base">📍 存放地點管理（新增 / 改名 / 刪除）</h3>
+        </div>
+        <button onclick="closeLocationManagerModal()" class="ehon-btn bg-[#C9EEFA] w-7 h-7 flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <div class="flex gap-1.5 mb-2.5">
+        <input
+          id="newLocationManagerInput"
+          type="text"
+          placeholder="輸入新地點（如：冰箱冷藏、零食櫃、房間抽屜）"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addLocationFromManager();}"
+          class="ehon-input flex-1 min-w-0 text-xs py-1.5 bg-[#FFFFFF]"
+        />
+        <button type="button" onclick="addLocationFromManager()" class="ehon-btn bg-[#7EC8E3] px-2.5 py-1.5 text-xs shrink-0">
+          ＋新增
+        </button>
+      </div>
+
+      <p class="text-[11px] opacity-75 mb-2">
+        💡 可直接修改地點名稱（該地點下的食物會自動同步更新）；點 <strong>▲ ▼</strong> 可調整順序，或點刪除移除位置。
+      </p>
+
+      <div id="locationManagerList" class="space-y-2 overflow-y-auto pr-0.5 flex-1"></div>
+
+      <div class="pt-2.5 mt-2.5 border-t-2 border-dashed border-[#23415A] flex justify-end">
+        <button type="button" onclick="closeLocationManagerModal()" class="ehon-btn bg-[#BCE6FF] px-5 py-1.5 text-xs">
+          完成關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== 新增 / 編輯食物 Modal ==================== -->
   <div id="itemModalBackdrop" class="fixed inset-0 bg-[#23415A]/45 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="ehon-box bg-[#F7FBFF] w-full max-w-md max-h-[92vh] overflow-y-auto p-4 rounded-b-none sm:rounded-b-[18px] animate-pop">
@@ -370,13 +408,26 @@
           />
         </div>
 
-        <!-- 分類選擇 -->
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="text-xs" for="itemCategorySelect">分類</label>
-            <button type="button" onclick="toggleNewCategoryBox()" class="text-[11px] underline">+新增分類</button>
+        <!-- 分類選擇 + 存放地點選擇（雙欄並列） -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs" for="itemCategorySelect">分類</label>
+              <button type="button" onclick="toggleNewCategoryBox()" class="text-[11px] underline">+新增分類</button>
+            </div>
+            <select id="itemCategorySelect" class="ehon-input w-full text-xs py-1.5 bg-[#FFFFFF]"></select>
           </div>
-          <select id="itemCategorySelect" class="ehon-input w-full text-xs py-1.5 bg-[#FFFFFF]"></select>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs" for="itemLocationSelect">📍 存放地點</label>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="toggleNewLocationBox()" class="text-[11px] underline">+新增</button>
+                <button type="button" onclick="openLocationManagerModal()" class="text-[11px] underline">⚙️管理</button>
+              </div>
+            </div>
+            <select id="itemLocationSelect" class="ehon-input w-full text-xs py-1.5 bg-[#FFFFFF]"></select>
+          </div>
         </div>
 
         <!-- 新增自訂分類輸入列 -->
@@ -385,9 +436,20 @@
             id="customCategoryInput"
             type="text"
             placeholder="輸入新分類名稱（如：麥片、水果乾）"
-            class="ehon-input flex-1 text-xs py-1.5 bg-[#FFFFFF]"
+            class="ehon-input flex-1 min-w-0 text-xs py-1.5 bg-[#FFFFFF]"
           />
-          <button type="button" onclick="addCustomCategory()" class="ehon-btn bg-[#7EC8E3] px-2.5 py-1.5 text-xs shrink-0">加入</button>
+          <button type="button" onclick="addCustomCategory()" class="ehon-btn bg-[#7EC8E3] px-2.5 py-1.5 text-xs shrink-0">加入分類</button>
+        </div>
+
+        <!-- 新增自訂存放地點輸入列 -->
+        <div id="customLocationBox" class="hidden flex gap-1.5">
+          <input
+            id="customLocationInput"
+            type="text"
+            placeholder="輸入新存放地點（如：冰箱門邊、客廳櫃子）"
+            class="ehon-input flex-1 min-w-0 text-xs py-1.5 bg-[#FFFFFF]"
+          />
+          <button type="button" onclick="addCustomLocation()" class="ehon-btn bg-[#9AD9F5] px-2.5 py-1.5 text-xs shrink-0">加入地點</button>
         </div>
 
         <!-- 有效日期 + 食物快速日期捷徑 -->
@@ -565,8 +627,17 @@
       '堅果/果乾'
     ];
 
+    const DEFAULT_LOCATIONS = [
+      '零食櫃',
+      '冰箱冷藏',
+      '冷凍庫',
+      '廚房置物架',
+      '客廳桌'
+    ];
+
     let foodItems = [];
     let categories = [...DEFAULT_CATEGORIES];
+    let locations = [...DEFAULT_LOCATIONS];
     let currentMainView = 'inventory'; // 'inventory' | 'expiring'
     let currentCategoryFilter = '全部';
     let pendingDeleteId = null;
@@ -651,6 +722,9 @@
         foodItems = remoteData.items.map(normalizeItem);
         if (Array.isArray(remoteData.categories) && remoteData.categories.length > 0) {
           categories = remoteData.categories;
+        }
+        if (Array.isArray(remoteData.locations) && remoteData.locations.length > 0) {
+          locations = remoteData.locations;
         }
         lastStateUpdatedAt = Number(remoteData.updatedAt || Date.now());
         hasPersistedDataLoaded = true;
@@ -751,6 +825,7 @@
           hasInitialized: true,
           updatedAt: lastStateUpdatedAt,
           categories: [...categories],
+          locations: [...locations],
           items: foodItems.map(normalizeItem)
         };
         await saveKeyToBrowserDB('main', payload);
@@ -840,6 +915,7 @@
           hasInitialized: true,
           updatedAt: lastStateUpdatedAt || Date.now(),
           categories: [...categories],
+          locations: [...locations],
           items: foodItems.map(normalizeItem)
         };
 
@@ -967,6 +1043,7 @@
         id: String(raw.id || 'food-' + Date.now()),
         name: String(raw.name || '未命名食物'),
         category: String(raw.category || categories[0] || '餅乾/洋芋片'),
+        location: raw.location !== undefined ? String(raw.location) : '',
         expiryDate: String(raw.expiryDate || getOffsetDateString(90)),
         stockCount,
         imageDataUrl: typeof raw.imageDataUrl === 'string' ? raw.imageDataUrl : ''
@@ -979,6 +1056,7 @@
           id: 'food-sample-1',
           name: '海苔鹽味厚切洋芋片',
           category: '餅乾/洋芋片',
+          location: '零食櫃',
           expiryDate: getOffsetDateString(18),
           stockCount: 2
         }),
@@ -986,6 +1064,7 @@
           id: 'food-sample-2',
           name: '農心辛拉麵（香菇牛肉風味）',
           category: '泡麵/麵食',
+          location: '廚房置物架',
           expiryDate: getOffsetDateString(58),
           stockCount: 4
         }),
@@ -993,6 +1072,7 @@
           id: 'food-sample-3',
           name: '日本白桃果汁軟糖',
           category: '糖果/巧克力',
+          location: '客廳桌',
           expiryDate: getOffsetDateString(75),
           stockCount: 3
         }),
@@ -1000,6 +1080,7 @@
           id: 'food-sample-4',
           name: '無糖日式綠茶寶特瓶',
           category: '飲料/沖泡',
+          location: '冰箱冷藏',
           expiryDate: getOffsetDateString(210),
           stockCount: 6
         })
@@ -1023,6 +1104,9 @@
             foodItems = parsed.items.map(normalizeItem);
             if (Array.isArray(parsed.cats) && parsed.cats.length > 0) {
               categories = parsed.cats;
+            }
+            if (Array.isArray(parsed.locs) && parsed.locs.length > 0) {
+              locations = parsed.locs;
             }
             isUsingUrlSnapshot = true;
             setSyncStatus('🔗 已載入分享網址食物快照', '#9AD9F5');
@@ -1050,6 +1134,9 @@
         if (Array.isArray(remoteGitHubData.categories) && remoteGitHubData.categories.length > 0) {
           categories = remoteGitHubData.categories;
         }
+        if (Array.isArray(remoteGitHubData.locations) && remoteGitHubData.locations.length > 0) {
+          locations = remoteGitHubData.locations;
+        }
         lastStateUpdatedAt = remoteTime || Date.now();
         hasPersistedDataLoaded = true;
         await saveStateToBrowserDB(false);
@@ -1069,6 +1156,9 @@
           : [];
         if (Array.isArray(savedBrowserState.categories) && savedBrowserState.categories.length > 0) {
           categories = savedBrowserState.categories;
+        }
+        if (Array.isArray(savedBrowserState.locations) && savedBrowserState.locations.length > 0) {
+          locations = savedBrowserState.locations;
         }
         lastStateUpdatedAt = localTime || Date.now();
         hasPersistedDataLoaded = true;
@@ -1122,6 +1212,9 @@
             foodItems = Array.isArray(cached.items) ? cached.items.map(normalizeItem) : [];
             if (Array.isArray(cached.categories) && cached.categories.length > 0) {
               categories = cached.categories;
+            }
+            if (Array.isArray(cached.locations) && cached.locations.length > 0) {
+              locations = cached.locations;
             }
             hasPersistedDataLoaded = true;
             isInitialLoading = false;
@@ -1530,6 +1623,175 @@
     }
 
     /**********************************************************
+     * 存放地點管理 Modal：新增、編輯改名、排序、刪除（不含分頁切換）
+     **********************************************************/
+    function openLocationManagerModal() {
+      if (isReadOnlyMode) return;
+      renderLocationManagerList();
+      const modal = document.getElementById('locationManagerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLocationManagerModal() {
+      const modal = document.getElementById('locationManagerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      const selectEl = document.getElementById('itemLocationSelect');
+      if (selectEl) {
+        populateLocationSelect(selectEl.value);
+      }
+      renderApp();
+    }
+
+    function renderLocationManagerList() {
+      const listEl = document.getElementById('locationManagerList');
+      if (!listEl) return;
+
+      const counts = {};
+      foodItems.forEach(item => {
+        if (item.location) {
+          counts[item.location] = (counts[item.location] || 0) + 1;
+        }
+      });
+
+      listEl.innerHTML = locations.map((loc, idx) => {
+        const itemCount = counts[loc] || 0;
+        return `
+          <div class="ehon-box-sm bg-[#EAF5FD] p-2 space-y-1.5">
+            <div class="flex items-center gap-1.5">
+              <div class="flex flex-col gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onclick="moveLocationOrder(${idx}, -1)"
+                  ${idx === 0 ? 'disabled style="opacity:0.35"' : ''}
+                  class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                  title="往上移"
+                >▲</button>
+                <button
+                  type="button"
+                  onclick="moveLocationOrder(${idx}, 1)"
+                  ${idx === locations.length - 1 ? 'disabled style="opacity:0.35"' : ''}
+                  class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                  title="往下移"
+                >▼</button>
+              </div>
+
+              <input
+                id="locEditInput_${idx}"
+                type="text"
+                value="${escapeHtml(loc)}"
+                onchange="renameLocationAt(${idx}, this.value)"
+                class="ehon-input flex-1 min-w-0 text-xs py-1.5 px-2.5 bg-[#FFFFFF]"
+                aria-label="存放地點名稱"
+              />
+            </div>
+
+            <div class="flex items-center justify-between gap-1.5 pl-6">
+              <span class="text-[11px] px-2 py-0.5 rounded-full border border-[#23415A] bg-[#FFFFFF]">
+                目前 ${itemCount} 項
+              </span>
+
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onclick="renameLocationAt(${idx}, document.getElementById('locEditInput_${idx}').value)"
+                  class="ehon-btn bg-[#9AD9F5] px-2.5 py-1 text-[11px]"
+                >改名</button>
+
+                <button
+                  type="button"
+                  onclick="deleteLocationAt(${idx})"
+                  class="ehon-btn bg-[#F9B4B8] px-2.5 py-1 text-[11px]"
+                >刪除</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addLocationFromManager() {
+      const input = document.getElementById('newLocationManagerInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (locations.includes(val)) {
+        showToast('此存放地點已經存在囉！');
+        return;
+      }
+      locations.push(val);
+      input.value = '';
+      renderLocationManagerList();
+      populateLocationSelect(val);
+      showToast(`📍 已新增存放地點「${val}」`);
+      await saveCategoriesToCloud();
+    }
+
+    async function renameLocationAt(index, newNameRaw) {
+      const oldName = locations[index];
+      const newName = (newNameRaw || '').trim();
+      if (!oldName || !newName || oldName === newName) {
+        renderLocationManagerList();
+        return;
+      }
+      if (locations.some((l, i) => i !== index && l === newName)) {
+        showToast('存放地點名稱重複，請換一個名稱');
+        renderLocationManagerList();
+        return;
+      }
+
+      locations[index] = newName;
+      foodItems.forEach(item => {
+        if (item.location === oldName) {
+          item.location = newName;
+        }
+      });
+
+      renderLocationManagerList();
+      populateLocationSelect(newName);
+      renderApp();
+      showToast(`✏️ 已將地點「${oldName}」改名為「${newName}」`);
+      await saveCategoriesToCloud();
+    }
+
+    async function moveLocationOrder(index, delta) {
+      const targetIndex = index + delta;
+      if (targetIndex < 0 || targetIndex >= locations.length) return;
+      const temp = locations[index];
+      locations[index] = locations[targetIndex];
+      locations[targetIndex] = temp;
+      renderLocationManagerList();
+      await saveCategoriesToCloud();
+    }
+
+    async function deleteLocationAt(index) {
+      const targetLoc = locations[index];
+      if (!targetLoc) return;
+
+      locations.splice(index, 1);
+
+      let clearedCount = 0;
+      foodItems.forEach(item => {
+        if (item.location === targetLoc) {
+          item.location = '';
+          clearedCount++;
+        }
+      });
+
+      renderLocationManagerList();
+      populateLocationSelect('');
+      renderApp();
+
+      if (clearedCount > 0) {
+        showToast(`🗑️ 已刪除地點「${targetLoc}」，原有品項已設為未指定地點`);
+      } else {
+        showToast(`🗑️ 已刪除地點「${targetLoc}」`);
+      }
+
+      await saveCategoriesToCloud();
+    }
+
+    /**********************************************************
      * 卡片庫存數量增減
      **********************************************************/
     async function adjustStockCount(itemId, delta) {
@@ -1576,7 +1838,8 @@
         if (searchVal) {
           filtered = filtered.filter(item =>
             (item.name || '').toLowerCase().includes(searchVal) ||
-            (item.category || '').toLowerCase().includes(searchVal)
+            (item.category || '').toLowerCase().includes(searchVal) ||
+            (item.location || '').toLowerCase().includes(searchVal)
           );
         }
         filtered.sort((a, b) => (a.expiryDate || '9999-12-31').localeCompare(b.expiryDate || '9999-12-31'));
@@ -1620,9 +1883,9 @@
         return `
           <article class="ehon-box ${expInfo.cardClass} px-3 py-2.5 transition-all flex flex-col justify-between">
             <div>
-              <!-- 第一列：分類標籤 + 右側編輯刪除 -->
+              <!-- 第一列：分類標籤 + 存放地點標籤（如圖示藍色區塊） + 右側編輯刪除 -->
               <div class="flex items-center justify-between gap-1.5 mb-2">
-                <div class="flex items-center gap-1 flex-wrap">
+                <div class="flex items-center gap-1 flex-wrap min-w-0">
                   ${showPriorityRank ? `
                     <span class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#BCE6FF]">
                       #${idx + 1} 優先吃
@@ -1632,6 +1895,12 @@
                     ${catStyle.svg}
                     <span>${escapeHtml(item.category)}</span>
                   </span>
+                  ${item.location ? `
+                    <span class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#FFFFFF] flex items-center gap-0.5">
+                      <span>📍</span>
+                      <span>${escapeHtml(item.location)}</span>
+                    </span>
+                  ` : ''}
                 </div>
 
                 ${isReadOnlyMode ? '' : `
@@ -1718,6 +1987,23 @@
       `).join('');
     }
 
+    function populateLocationSelect(selectedLoc) {
+      const select = document.getElementById('itemLocationSelect');
+      if (!select) return;
+      if (!Array.isArray(locations)) {
+        locations = [...DEFAULT_LOCATIONS];
+      }
+      const options = [...locations];
+      if (selectedLoc && !options.includes(selectedLoc)) {
+        options.unshift(selectedLoc);
+      }
+      const emptyOption = `<option value="" ${!selectedLoc ? 'selected' : ''}>（未指定地點）</option>`;
+      const locOptions = options.map(loc => `
+        <option value="${escapeHtml(loc)}" ${loc === selectedLoc ? 'selected' : ''}>📍 ${escapeHtml(loc)}</option>
+      `).join('');
+      select.innerHTML = emptyOption + locOptions;
+    }
+
     function openItemModal(editId = null) {
       if (isReadOnlyMode) return;
       const backdrop = document.getElementById('itemModalBackdrop');
@@ -1729,6 +2015,8 @@
 
       const customBox = document.getElementById('customCategoryBox');
       if (customBox) customBox.classList.add('hidden');
+      const customLocBox = document.getElementById('customLocationBox');
+      if (customLocBox) customLocBox.classList.add('hidden');
       const photoFileInput = document.getElementById('itemPhotoInput');
       if (photoFileInput) photoFileInput.value = '';
 
@@ -1739,6 +2027,7 @@
         idInput.value = target.id;
         nameInput.value = target.name;
         populateCategorySelect(target.category);
+        populateLocationSelect(target.location || '');
         expInput.value = target.expiryDate;
         stockInput.value = target.stockCount;
         modalTempPhotoDataUrl = target.imageDataUrl || '';
@@ -1748,6 +2037,7 @@
         nameInput.value = '';
         const defaultCat = currentCategoryFilter !== '全部' ? currentCategoryFilter : categories[0];
         populateCategorySelect(defaultCat);
+        populateLocationSelect(locations[0] || '');
         expInput.value = getOffsetDateString(90);
         stockInput.value = 1;
         modalTempPhotoDataUrl = '';
@@ -1881,11 +2171,34 @@
       showToast(`已新增食物分類「${val}」`);
     }
 
+    function toggleNewLocationBox() {
+      const box = document.getElementById('customLocationBox');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        document.getElementById('customLocationInput').focus();
+      }
+    }
+
+    async function addCustomLocation() {
+      const input = document.getElementById('customLocationInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!locations.includes(val)) {
+        locations.push(val);
+        await saveCategoriesToCloud();
+      }
+      populateLocationSelect(val);
+      input.value = '';
+      document.getElementById('customLocationBox').classList.add('hidden');
+      showToast(`📍 已新增存放地點「${val}」`);
+    }
+
     async function handleSaveItem(event) {
       event.preventDefault();
       const id = document.getElementById('editingItemId').value;
       const name = document.getElementById('itemNameInput').value.trim();
       const category = document.getElementById('itemCategorySelect').value || categories[0] || '餅乾/洋芋片';
+      const location = document.getElementById('itemLocationSelect').value || '';
       const expiryDate = document.getElementById('itemExpiryInput').value;
       const stockCount = Math.max(0, parseInt(document.getElementById('itemStockInput').value, 10) || 0);
 
@@ -1902,6 +2215,7 @@
             ...foodItems[idx],
             name,
             category,
+            location,
             expiryDate,
             stockCount,
             imageDataUrl: modalTempPhotoDataUrl
@@ -1914,6 +2228,7 @@
           id: 'food-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
           name,
           category,
+          location,
           expiryDate,
           stockCount,
           imageDataUrl: modalTempPhotoDataUrl
@@ -1973,6 +2288,7 @@
       try {
         const snapshotPayload = JSON.stringify({
           cats: categories,
+          locs: locations,
           items: foodItems.map(({ imageDataUrl, ...rest }) => rest)
         });
         const encoded = btoa(unescape(encodeURIComponent(snapshotPayload)));
@@ -2014,6 +2330,7 @@
     async function resetToSampleData() {
       isUsingUrlSnapshot = false;
       categories = [...DEFAULT_CATEGORIES];
+      locations = [...DEFAULT_LOCATIONS];
       foodItems = createSampleItems();
       await saveStateToBrowserDB(true);
       closeShareModal();
