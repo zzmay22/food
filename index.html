@@ -576,6 +576,7 @@
     let isReadOnlyMode = false;
     let isUsingUrlSnapshot = false;
     let hasPersistedDataLoaded = false;
+    let isInitialLoading = true;
     let lastStateUpdatedAt = 0;
     let modalTempPhotoDataUrl = '';
 
@@ -1075,8 +1076,24 @@
     }
 
     async function initApp() {
-      // 先立即渲染預設畫面，確保任何時候畫面與按鈕都立即可點擊
-      foodItems = createSampleItems();
+      // 先同步讀取 localStorage 快取，避免畫面閃現 4 個預設範例
+      try {
+        const cachedRaw = window.localStorage.getItem(LS_FALLBACK_PREFIX + 'main');
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (cached && cached.hasInitialized) {
+            foodItems = Array.isArray(cached.items) ? cached.items.map(normalizeItem) : [];
+            if (Array.isArray(cached.categories) && cached.categories.length > 0) {
+              categories = cached.categories;
+            }
+            hasPersistedDataLoaded = true;
+            isInitialLoading = false;
+          }
+        }
+      } catch (e) {
+        // 忽略讀取快取異常
+      }
+
       renderApp();
 
       try {
@@ -1085,6 +1102,7 @@
           foodItems = createSampleItems();
           await saveStateToBrowserDB(false);
         }
+        isInitialLoading = false;
         if (!ghConfig.token && !isUsingUrlSnapshot) {
           setSyncStatus('💾 自動儲存中（點右上角可分享最新零食網址）', '#9AD9F5');
         }
@@ -1093,6 +1111,7 @@
         renderApp();
       } catch (err) {
         console.error('初始化資料異常:', err);
+        isInitialLoading = false;
         renderApp();
       }
     }
@@ -1521,7 +1540,15 @@
 
       const listContainer = document.getElementById('itemsListContainer');
       if (filtered.length === 0) {
-        if (currentMainView === 'expiring') {
+        if (isInitialLoading) {
+          listContainer.innerHTML = `
+            <div class="col-span-full ehon-box bg-[#FFFFFF] p-5 text-center">
+              <div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[#BCE6FF] border-[3px] border-[#23415A] flex items-center justify-center text-lg">☁️</div>
+              <div class="text-sm mb-0.5">正在讀取最新食物庫存...</div>
+              <p class="text-xs opacity-75">請稍候片刻，正在同步您的美食資料</p>
+            </div>
+          `;
+        } else if (currentMainView === 'expiring') {
           listContainer.innerHTML = `
             <div class="col-span-full ehon-box bg-[#FFFFFF] p-5 text-center">
               <div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[#C9EEFA] border-[3px] border-[#23415A] flex items-center justify-center text-lg">✓</div>
@@ -1670,7 +1697,7 @@
         stockInput.value = target.stockCount;
         modalTempPhotoDataUrl = target.imageDataUrl || '';
       } else {
-        titleEl.textContent = '新增食物 / 零食品項';
+        titleEl.textContent = '新增食物 / 零食';
         idInput.value = '';
         nameInput.value = '';
         const defaultCat = currentCategoryFilter !== '全部' ? currentCategoryFilter : categories[0];
@@ -1684,18 +1711,18 @@
       previewModalExpiryBadge();
       backdrop.classList.remove('hidden');
       backdrop.classList.add('flex');
-      setTimeout(() => nameInput.focus(), 60);
     }
 
     function updateModalPhotoPreview() {
-      const box = document.getElementById('modalPhotoPreviewBox');
+      const previewBox = document.getElementById('modalPhotoPreviewBox');
       const removeBtn = document.getElementById('removeItemPhotoBtn');
-      if (!box) return;
+      if (!previewBox) return;
+
       if (modalTempPhotoDataUrl) {
-        box.innerHTML = `<img src="${modalTempPhotoDataUrl}" alt="預覽照片" class="w-full h-full object-cover" />`;
+        previewBox.innerHTML = `<img src="${modalTempPhotoDataUrl}" alt="品項預覽" class="w-full h-full object-cover" />`;
         if (removeBtn) removeBtn.classList.remove('hidden');
       } else {
-        box.innerHTML = '📷';
+        previewBox.innerHTML = '📷';
         if (removeBtn) removeBtn.classList.add('hidden');
       }
     }
