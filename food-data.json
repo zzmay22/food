@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795358014181,
+  "updatedAt": 1795358020227,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -509,7 +509,7 @@
     },
     {
       "id": "food-1795354351358-os5h",
-      "name": "好吃調味胡椒粉（冰箱）",
+      "name": "好吃調味胡椒粉",
       "category": "罐頭/調理包",
       "location": "冰箱冷藏",
       "expiryDate": "2026-09-30",
