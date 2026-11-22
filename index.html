@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>食物零食庫存小管家｜日日美味帖</title>
+
+  <!-- 設定網頁頁籤小圖示與 iPhone Safari 加入主畫面圖示 (icon.jpg) -->
+  <link rel="icon" type="image/jpeg" href="icon.jpg" />
+  <link rel="apple-touch-icon" href="icon.jpg" />
+
+  <!-- 載入 Google Fonts: Huninn (粉圓體) 與 iOS/Safari 相容 Webfont 備援 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jf-openhuninn-1.1@1.1.0/stylesheet.min.css">
+
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --washi-white: #F7FBFF;   /* 清爽冰藍白底色 */
+      --ink-gray: #23415A;      /* 深海藍墨線框（比純黑更柔和清爽） */
+      --coral-pink: #7EC8E3;    /* 晴空水藍主強調色 */
+      --yamabuki-yellow: #BCE6FF; /* 透亮淺天藍 */
+      --aqua-blue: #9AD9F5;     /* 薄荷水藍 */
+      --wakatake-green: #C9EEFA;/* 冰晶淺藍 */
+      --exp-pink-bg: #FCE4EC;   /* 剩餘 3 個月內：粉紅底色 */
+      --exp-red-bg: #F9B4B8;    /* 剩餘 1 個月內（即期/已過期）：顯眼紅底色 */
+      --paper-cream: #EAF5FD;   /* 雲朵淺藍區塊底色 */
+    }
+
+    * {
+      font-family: 'Huninn', 'jf-openhuninn-1.1', 'jf-openhuninn', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.25;
+    }
+
+    body {
+      background-color: var(--washi-white);
+      color: var(--ink-gray);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      line-height: 1.25;
+      background-image: radial-gradient(#CBE6F9 1.2px, transparent 1.2px);
+      background-size: 18px 18px;
+    }
+
+    .ehon-box {
+      border: 3px solid var(--ink-gray);
+      border-radius: 18px;
+      box-shadow: 3px 3px 0px var(--ink-gray);
+    }
+
+    .ehon-box-sm {
+      border: 3px solid var(--ink-gray);
+      border-radius: 12px;
+      box-shadow: 2px 2px 0px var(--ink-gray);
+    }
+
+    .ehon-pill {
+      border: 3px solid var(--ink-gray);
+      border-radius: 9999px;
+      box-shadow: 2px 2px 0px var(--ink-gray);
+    }
+
+    .ehon-btn {
+      border: 3px solid var(--ink-gray);
+      border-radius: 14px;
+      box-shadow: 2px 2px 0px var(--ink-gray);
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ehon-btn:active {
+      transform: translate(1.5px, 1.5px);
+      box-shadow: 0.5px 0.5px 0px var(--ink-gray);
+    }
+
+    .ehon-input {
+      border: 3px solid var(--ink-gray);
+      border-radius: 12px;
+      background-color: var(--washi-white);
+      color: var(--ink-gray);
+      padding: 7px 11px;
+      font-size: 0.92rem;
+      line-height: 1.25;
+      outline: none;
+      transition: box-shadow 0.15s ease;
+    }
+
+    .ehon-input:focus {
+      box-shadow: 2px 2px 0px var(--ink-gray);
+      background-color: #FFFFFF;
+    }
+
+    /* 食物效期三階段平塗背景色 */
+    .card-safe {
+      background-color: #FFFFFF;
+    }
+    .card-soon-pink {
+      background-color: var(--exp-pink-bg);
+    }
+    .card-urgent-red {
+      background-color: var(--exp-red-bg);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.15s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="pb-20">
+
+  <!-- 響應式主容器（手機單欄優先，平板雙欄、電腦三欄） -->
+  <div class="max-w-md md:max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-5 pt-2.5 md:pt-4">
+
+    <!-- 標題列 Header -->
+    <header class="ehon-box bg-[#FFFFFF] px-3 sm:px-4 py-2.5 mb-2.5">
+      <div class="flex items-center justify-between gap-1.5">
+        <div class="flex items-center gap-2 min-w-0">
+          <!-- 網站專屬圖示 icon.jpg（若尚未上傳則顯示手繪感零食餅乾 SVG 備援） -->
+          <div class="w-10 h-10 rounded-xl bg-[#BCE6FF] border-[3px] border-[#23415A] flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src="icon.jpg"
+              alt="食物零食庫存小管家圖示"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            />
+            <svg class="w-6 h-6 hidden" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="16" fill="#FFFFFF" stroke="#23415A" stroke-width="3"/>
+              <circle cx="19" cy="19" r="2.2" fill="#23415A"/>
+              <circle cx="29" cy="21" r="2" fill="#23415A"/>
+              <circle cx="21" cy="29" r="2.3" fill="#23415A"/>
+              <circle cx="29" cy="30" r="1.8" fill="#23415A"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-base sm:text-lg tracking-wide truncate">食物零食庫存小管家</h1>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-[#7EC8E3] border border-[#23415A] inline-block shrink-0"></span>
+              <span id="syncStatusText" class="text-[11px] opacity-85 truncate">💾 本機儲存就緒...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側功能按鈕：僅保留雲端同步設定 -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="openShareModal()" class="ehon-btn bg-[#BCE6FF] px-2.5 py-1.5 text-xs flex items-center gap-1" title="設定自動雲端同步與分享網址">
+            <span>☁️ 雲端/分享</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 唯讀檢視模式提示橫幅 -->
+    <div id="readOnlyBanner" class="hidden ehon-box-sm bg-[#BCE6FF] px-3 py-1.5 mb-2 flex items-center justify-between gap-2">
+      <div class="text-xs flex items-center gap-1">
+        <span>👀 <strong>好友唯讀模式</strong>（可瀏覽零食庫存與效期）</span>
+      </div>
+      <button onclick="disableReadOnlyMode()" class="ehon-btn bg-[#FFFFFF] px-2 py-1 text-[11px] shrink-0">
+        切換編輯
+      </button>
+    </div>
+
+    <!-- 主分頁切換器：分類庫存 vs 快到期優先吃 -->
+    <nav class="grid grid-cols-2 gap-2 mb-2" aria-label="主要檢視切換">
+      <button id="tabBtnInventory" onclick="switchMainView('inventory')" class="ehon-btn py-2 px-2.5 text-sm flex items-center justify-center gap-1.5 bg-[#BCE6FF]">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="16" rx="3" fill="#FFFFFF" stroke="#23415A" stroke-width="2.5"/>
+          <path d="M7 9H17M7 14H13" stroke="#23415A" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span>食物庫存</span>
+        <span id="inventoryTabBadge" class="px-1.5 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#FFFFFF]">0</span>
+      </button>
+
+      <button id="tabBtnExpiring" onclick="switchMainView('expiring')" class="ehon-btn py-2 px-2.5 text-sm flex items-center justify-center gap-1 bg-[#FFFFFF] relative">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" fill="#7EC8E3" stroke="#23415A" stroke-width="2.5"/>
+          <path d="M12 7V12L15 14" stroke="#23415A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>⏰ 3個月內到期</span>
+        <span id="expiringTabBadge" class="px-1.5 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#F9B4B8]">0</span>
+      </button>
+    </nav>
+
+    <!-- 食物效期底色圖例說明條 -->
+    <div class="ehon-box-sm bg-[#EAF5FD] px-2.5 py-1.5 mb-2 flex items-center justify-between sm:justify-around text-[11px]">
+      <span class="flex items-center gap-1">
+        <span class="w-3 h-3 rounded-full bg-[#F9B4B8] border-2 border-[#23415A] inline-block"></span>
+        <span>紅底：1個月內/過期</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-3 h-3 rounded-full bg-[#FCE4EC] border-2 border-[#23415A] inline-block"></span>
+        <span>粉紅底：3個月內</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-3 h-3 rounded-full bg-[#FFFFFF] border-2 border-[#23415A] inline-block"></span>
+        <span>白底：大於3個月</span>
+      </span>
+    </div>
+
+    <!-- ==================== 分頁 1：食物清單控制區 ==================== -->
+    <div id="inventoryControls" class="mb-2.5 space-y-1.5">
+      <div class="flex items-center gap-1.5 overflow-x-auto md:flex-wrap no-scrollbar pb-0.5" id="categoryTabsContainer">
+        <!-- 由 JS 動態產生食物分類膠囊按鈕 -->
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <div class="relative flex-1">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="搜尋零食名稱或分類..."
+            oninput="renderApp()"
+            class="ehon-input w-full pl-8 pr-7 py-1.5 text-xs bg-[#FFFFFF]"
+          />
+          <svg class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="#23415A" stroke-width="2.5"/>
+            <path d="M16 16L20 20" stroke="#23415A" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <button
+            id="clearSearchBtn"
+            onclick="clearSearch()"
+            class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#7EC8E3] border border-[#23415A] text-[10px] flex items-center justify-center"
+          >✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 分頁 2：3個月內到期提醒橫幅 ==================== -->
+    <div id="expiringReminderBanner" class="hidden ehon-box-sm bg-[#BCE6FF] px-3 py-2 mb-2.5">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-[#FFFFFF] border-2 border-[#23415A] flex items-center justify-center shrink-0 text-sm">
+          🍪
+        </div>
+        <div class="text-xs">
+          <strong>即期美食優先消滅清單：</strong>已依有效日期由近到遠排序，快點吃掉才不會浪費！
+        </div>
+      </div>
+    </div>
+
+    <!-- 食物卡片清單容器 -->
+    <main id="itemsListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-3.5 items-stretch">
+      <!-- 由 JS 渲染食物卡片 -->
+    </main>
+
+  </div>
+
+  <!-- 底部懸浮單手操作「＋新增食物零食」按鈕列 -->
+  <div id="floatingAddBar" class="fixed bottom-3 left-0 right-0 z-30 px-3 pointer-events-none">
+    <div class="max-w-md mx-auto flex justify-center">
+      <button
+        onclick="openItemModal()"
+        class="pointer-events-auto ehon-btn bg-[#7EC8E3] px-4 py-2.5 text-sm flex items-center gap-1.5 w-full justify-center"
+      >
+        <span class="w-5 h-5 rounded-full bg-[#FFFFFF] border-2 border-[#23415A] flex items-center justify-center text-base leading-none">+</span>
+        <span>新增食物 / 零食品項</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 分類編輯管理刪除 Modal ==================== -->
+  <div id="categoryManagerModal" class="fixed inset-0 bg-[#23415A]/45 z-50 hidden items-center justify-center p-3">
+    <div class="ehon-box bg-[#F7FBFF] w-full max-w-md max-h-[88vh] flex flex-col p-4 animate-pop">
+      <div class="flex items-center justify-between pb-2 mb-2.5 border-b-[3px] border-[#23415A]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#7EC8E3] border-2 border-[#23415A]"></span>
+          <h3 class="text-base">⚙️ 食物分類管理（新增 / 改名 / 刪除）</h3>
+        </div>
+        <button onclick="closeCategoryManagerModal()" class="ehon-btn bg-[#C9EEFA] w-7 h-7 flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <div class="flex gap-1.5 mb-2.5">
+        <input
+          id="newCategoryManagerInput"
+          type="text"
+          placeholder="輸入新分類（如：巧克力、堅果、冷凍食品）"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addCategoryFromManager();}"
+          class="ehon-input flex-1 text-xs py-1.5 bg-[#FFFFFF]"
+        />
+        <button type="button" onclick="addCategoryFromManager()" class="ehon-btn bg-[#7EC8E3] px-3 py-1.5 text-xs shrink-0">
+          ＋新增分類
+        </button>
+      </div>
+
+      <p class="text-[11px] opacity-75 mb-2">
+        💡 點擊分類名稱可<strong>直接修改名稱</strong>（該分類下的食物會自動同步更新名稱）；點 <strong>▲ ▼</strong> 可調整順序。
+      </p>
+
+      <div id="categoryManagerList" class="space-y-1.5 overflow-y-auto pr-0.5 flex-1"></div>
+
+      <div class="pt-2.5 mt-2.5 border-t-2 border-dashed border-[#23415A] flex justify-end">
+        <button type="button" onclick="closeCategoryManagerModal()" class="ehon-btn bg-[#BCE6FF] px-5 py-1.5 text-xs">
+          完成關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 新增 / 編輯食物 Modal ==================== -->
+  <div id="itemModalBackdrop" class="fixed inset-0 bg-[#23415A]/45 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="ehon-box bg-[#F7FBFF] w-full max-w-md max-h-[92vh] overflow-y-auto p-4 rounded-b-none sm:rounded-b-[18px] animate-pop">
+      <div class="flex items-center justify-between pb-2 mb-2.5 border-b-[3px] border-[#23415A]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#7EC8E3] border-2 border-[#23415A]"></span>
+          <h2 id="modalTitle" class="text-base">新增食物 / 零食</h2>
+        </div>
+        <button onclick="closeItemModal()" class="ehon-btn bg-[#C9EEFA] w-7 h-7 flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <form id="itemForm" onsubmit="handleSaveItem(event)" class="space-y-2.5">
+        <input type="hidden" id="editingItemId" />
+
+        <!-- 品名 -->
+        <div>
+          <label class="block text-xs mb-1" for="itemNameInput">食物名稱 / 口味 <span class="text-[10px] bg-[#BCE6FF] px-1.5 py-0.2 rounded border border-[#23415A]">必填</span></label>
+          <input
+            id="itemNameInput"
+            type="text"
+            required
+            placeholder="例如：樂事海苔洋芋片、辛拉麵、義美小泡芙..."
+            class="ehon-input w-full text-sm bg-[#FFFFFF]"
+          />
+        </div>
+
+        <!-- 分類選擇 -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs" for="itemCategorySelect">分類</label>
+            <button type="button" onclick="toggleNewCategoryBox()" class="text-[11px] underline">+新增分類</button>
+          </div>
+          <select id="itemCategorySelect" class="ehon-input w-full text-xs py-1.5 bg-[#FFFFFF]"></select>
+        </div>
+
+        <!-- 新增自訂分類輸入列 -->
+        <div id="customCategoryBox" class="hidden flex gap-1.5">
+          <input
+            id="customCategoryInput"
+            type="text"
+            placeholder="輸入新分類名稱（如：麥片、水果乾）"
+            class="ehon-input flex-1 text-xs py-1.5 bg-[#FFFFFF]"
+          />
+          <button type="button" onclick="addCustomCategory()" class="ehon-btn bg-[#7EC8E3] px-2.5 py-1.5 text-xs shrink-0">加入</button>
+        </div>
+
+        <!-- 有效日期 + 食物快速日期捷徑 -->
+        <div>
+          <label class="block text-xs mb-1" for="itemExpiryInput">有效日期 <span class="text-[10px] bg-[#BCE6FF] px-1.5 py-0.2 rounded border border-[#23415A]">剩3個月粉紅底 / 剩1個月紅底</span></label>
+          <input
+            id="itemExpiryInput"
+            type="date"
+            required
+            onchange="previewModalExpiryBadge()"
+            class="ehon-input w-full text-xs py-1.5 bg-[#FFFFFF]"
+          />
+          <div class="flex items-center gap-1 mt-1 flex-wrap">
+            <span class="text-[11px] opacity-75">快速效期：</span>
+            <button type="button" onclick="setQuickExpiryDays(14)" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#F9B4B8]">+2週(紅)</button>
+            <button type="button" onclick="setQuickExpiryDays(25)" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#F9B4B8]">+25天(紅)</button>
+            <button type="button" onclick="setQuickExpiryDays(60)" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#FCE4EC]">+2個月(粉)</button>
+            <button type="button" onclick="setQuickExpiryDays(180)" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#C9EEFA]">+半年</button>
+            <button type="button" onclick="setQuickExpiryDays(365)" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#C9EEFA]">+1年</button>
+          </div>
+          <div id="modalExpiryPreview" class="mt-1.5 px-2.5 py-1 rounded-lg border-2 border-[#23415A] text-xs">
+            請選擇有效日期
+          </div>
+        </div>
+
+        <!-- 庫存數量 -->
+        <div class="ehon-box-sm bg-[#C9EEFA] p-2.5 flex items-center justify-between">
+          <label class="text-xs">庫存數量（包 / 份）</label>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="stepFormStock(-1)" class="ehon-btn bg-[#FFFFFF] w-7 h-7 text-sm flex items-center justify-center">−</button>
+            <input id="itemStockInput" type="number" min="0" value="1" class="w-12 text-center bg-transparent text-base focus:outline-none" />
+            <button type="button" onclick="stepFormStock(1)" class="ehon-btn bg-[#FFFFFF] w-7 h-7 text-sm flex items-center justify-center">＋</button>
+          </div>
+        </div>
+
+        <!-- 表單底部按鈕 -->
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeItemModal()" class="ehon-btn bg-[#FFFFFF] flex-1 py-2 text-xs">
+            取消
+          </button>
+          <button type="submit" class="ehon-btn bg-[#7EC8E3] flex-1 py-2 text-xs">
+            💾 儲存食物
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 刪除品項確認 Modal ==================== -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-[#23415A]/45 z-50 hidden items-center justify-center p-4">
+    <div class="ehon-box bg-[#F7FBFF] w-full max-w-xs p-4 text-center animate-pop">
+      <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-[#F9B4B8] border-[3px] border-[#23415A] flex items-center justify-center text-base">
+        🗑️
+      </div>
+      <h3 class="text-sm mb-1">確定要刪除嗎？</h3>
+      <p id="deleteConfirmText" class="text-xs opacity-80 mb-3">確定要將此食物從庫存本中移除嗎？</p>
+      <div class="flex gap-2">
+        <button type="button" onclick="closeDeleteModal()" class="ehon-btn bg-[#FFFFFF] flex-1 py-1.5 text-xs">
+          先不要
+        </button>
+        <button type="button" id="confirmDeleteBtn" class="ehon-btn bg-[#F9B4B8] flex-1 py-1.5 text-xs">
+          確定刪除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 自動雲端同步設定與分享網址 Modal ==================== -->
+  <div id="shareModalBackdrop" class="fixed inset-0 bg-[#23415A]/45 z-50 hidden items-center justify-center p-3">
+    <div class="ehon-box bg-[#F7FBFF] w-full max-w-md max-h-[90vh] overflow-y-auto p-4 animate-pop">
+      <div class="flex items-center justify-between pb-2 mb-2.5 border-b-[3px] border-[#23415A]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-3.5 rounded-full bg-[#7EC8E3] border-2 border-[#23415A]"></span>
+          <h3 class="text-base">☁️ 食物雲端同步設定 ＆ 分享網址</h3>
+        </div>
+        <button onclick="closeShareModal()" class="ehon-btn bg-[#C9EEFA] w-7 h-7 flex items-center justify-center text-xs">✕</button>
+      </div>
+
+      <!-- GitHub 自動雲端同步設定 -->
+      <div class="ehon-box-sm bg-[#C9EEFA] p-3 mb-2.5 space-y-2">
+        <div class="flex items-center justify-between gap-1">
+          <div class="text-xs">⚡ <strong>GitHub 雲端自動同步（獨立存為 food-data.json）</strong></div>
+          <span id="ghAutoSyncBadge" class="px-2 py-0.5 text-[10px] rounded-full border-2 border-[#23415A] bg-[#FFFFFF]">尚未綁定金鑰</span>
+        </div>
+
+        <p class="text-[11px] bg-[#FFFFFF] p-2 rounded-xl border-2 border-[#23415A]">
+          若您上傳到同一組 GitHub 帳號（如 <code>lzy26362636/zzstore</code> 並命名此頁為 <code>food.html</code>），系統會自動將食物存到獨立的 <code>food-data.json</code>，<strong>完全不會覆蓋到原本的保養品資料</strong>！
+        </p>
+
+        <div class="grid grid-cols-2 gap-1.5">
+          <div>
+            <label class="block text-[10px] mb-0.5">GitHub 帳號</label>
+            <input id="ghOwnerInput" type="text" value="lzy26362636" class="ehon-input w-full text-xs py-1 px-2 bg-[#FFFFFF]" />
+          </div>
+          <div>
+            <label class="block text-[10px] mb-0.5">儲存庫名稱 (Repo)</label>
+            <input id="ghRepoInput" type="text" value="zzstore" class="ehon-input w-full text-xs py-1 px-2 bg-[#FFFFFF]" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-0.5">
+            <label class="text-[10px]" for="ghTokenInput">GitHub Personal Access Token</label>
+            <a
+              href="https://github.com/settings/tokens/new?scopes=repo&description=zzstore-food-autosync"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-[10px] underline bg-[#BCE6FF] px-1.5 py-0.2 rounded border border-[#23415A]"
+            >🔑 點我一鍵取得金鑰</a>
+          </div>
+          <input
+            id="ghTokenInput"
+            type="password"
+            placeholder="貼上 ghp_... 開頭的金鑰"
+            class="ehon-input w-full text-xs py-1.5 px-2 bg-[#FFFFFF]"
+          />
+        </div>
+
+        <div class="flex gap-1.5 pt-0.5">
+          <button type="button" onclick="saveGitHubSyncConfig()" class="ehon-btn bg-[#7EC8E3] flex-1 py-1.5 text-xs">
+            💾 綁定並立即同步上雲端
+          </button>
+          <button type="button" id="disconnectGhBtn" onclick="clearGitHubToken()" class="hidden ehon-btn bg-[#FFFFFF] px-2.5 py-1.5 text-xs">
+            解除
+          </button>
+        </div>
+      </div>
+
+      <!-- 分享網址區 -->
+      <div class="ehon-box-sm bg-[#EAF5FD] p-3 mb-2.5 space-y-1.5">
+        <div class="text-xs">🔗 <strong>分享給朋友或家人看的零食清單網址：</strong></div>
+        <div class="flex gap-1.5 items-center">
+          <span class="text-[11px] shrink-0">好友唯讀：</span>
+          <input id="shareReadOnlyUrlInput" type="text" readonly class="ehon-input flex-1 text-xs py-1 px-2 bg-[#FFFFFF]" />
+          <button onclick="copyInputUrl('shareReadOnlyUrlInput', '已複製「好友唯讀網址」！')" class="ehon-btn bg-[#9AD9F5] px-2.5 py-1 text-xs shrink-0">複製</button>
+        </div>
+        <div class="flex gap-1.5 items-center">
+          <span class="text-[11px] shrink-0">一般網址：</span>
+          <input id="shareEditUrlInput" type="text" readonly class="ehon-input flex-1 text-xs py-1 px-2 bg-[#FFFFFF]" />
+          <button onclick="copyInputUrl('shareEditUrlInput', '已複製「一般網址」！')" class="ehon-btn bg-[#C9EEFA] px-2.5 py-1 text-xs shrink-0">複製</button>
+        </div>
+        <div class="flex gap-1.5 items-center">
+          <span class="text-[11px] shrink-0">快照網址：</span>
+          <input id="shareSnapshotUrlInput" type="text" readonly class="ehon-input flex-1 text-xs py-1 px-2 bg-[#FFFFFF]" />
+          <button onclick="copyInputUrl('shareSnapshotUrlInput', '已複製「攜帶資料快照網址」！')" class="ehon-btn bg-[#BCE6FF] px-2.5 py-1 text-xs shrink-0">複製</button>
+        </div>
+      </div>
+
+      <!-- 一鍵清空與重置範例 -->
+      <div class="pt-2 border-t-2 border-dashed border-[#23415A] flex items-center justify-between gap-2 text-[11px] flex-wrap">
+        <span class="opacity-75 truncate max-w-[45%]" id="currentUserIdDisplay">儲存狀態：本機＋雲端就緒</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick="clearAllItemsData()" class="ehon-btn bg-[#F9B4B8] px-2.5 py-1 text-[11px]">🗑️ 清空所有食物</button>
+          <button onclick="resetToSampleData()" class="ehon-btn bg-[#BCE6FF] px-2.5 py-1 text-[11px]">還原預設範例</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 輕量繪本風 Toast 訊息提示 -->
+  <div id="toastMessage" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden ehon-pill bg-[#BCE6FF] px-3.5 py-1.5 text-xs">
+    已更新食物庫存！
+  </div>
+
+  <script>
+    /**********************************************************
+     * 食物零食庫存小管家 - 獨立 IndexedDB + localStorage 雙重儲存 + GitHub 雲端同步
+     **********************************************************/
+
+    // 預設食物零食分類
+    const DEFAULT_CATEGORIES = [
+      '餅乾/洋芋片',
+      '糖果/巧克力',
+      '泡麵/麵食',
+      '飲料/沖泡',
+      '罐頭/調理包',
+      '堅果/果乾'
+    ];
+
+    // 應用程式狀態
+    let foodItems = [];
+    let categories = [...DEFAULT_CATEGORIES];
+    let currentMainView = 'inventory'; // 'inventory' | 'expiring'
+    let currentCategoryFilter = '全部';
+    let pendingDeleteId = null;
+    let isReadOnlyMode = false;
+    let isUsingUrlSnapshot = false;
+    let hasPersistedDataLoaded = false;
+    let lastStateUpdatedAt = 0;
+
+    // GitHub 雲端自動同步設定（使用獨立檔案 food-data.json，不干擾保養品）
+    let ghConfig = {
+      owner: 'lzy26362636',
+      repo: 'zzstore',
+      token: '',
+      fileSha: ''
+    };
+    const GH_DATA_FILENAME = 'food-data.json';
+    let ghSyncDebounceTimer = null;
+    let isPushingToGitHub = false;
+    let pendingGitHubPush = false;
+
+    function detectGitHubPagesRepo() {
+      const host = window.location.hostname || '';
+      if (host.endsWith('.github.io')) {
+        const detectedOwner = host.replace('.github.io', '');
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const detectedRepo = pathParts[0] || 'zzstore';
+        if (detectedOwner) ghConfig.owner = detectedOwner;
+        if (detectedRepo) ghConfig.repo = detectedRepo;
+      }
+    }
+    detectGitHubPagesRepo();
+
+    /**********************************************************
+     * 獨立瀏覽器 IndexedDB + localStorage 雙重備援儲存
+     **********************************************************/
+    const IDB_NAME = 'FoodEhonInventoryDB';
+    const IDB_VERSION = 1;
+    const IDB_STORE = 'food_state';
+    const LS_FALLBACK_PREFIX = 'FoodEhonFallback_';
+
+    function openBrowserDB() {
+      return new Promise((resolve) => {
+        try {
+          if (!window.indexedDB) {
+            resolve(null);
+            return;
+          }
+          const req = window.indexedDB.open(IDB_NAME, IDB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const idb = e.target.result;
+            if (!idb.objectStoreNames.contains(IDB_STORE)) {
+              idb.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function loadKeyFromBrowserDB(key) {
+      try {
+        const idb = await openBrowserDB();
+        if (idb) {
+          const val = await new Promise((resolve) => {
+            const tx = idb.transaction(IDB_STORE, 'readonly');
+            const store = tx.objectStore(IDB_STORE);
+            const getReq = store.get(key);
+            getReq.onsuccess = () => resolve(getReq.result || null);
+            getReq.onerror = () => resolve(null);
+          });
+          if (val) return val;
+        }
+      } catch (e) {
+        // 忽略 IndexedDB 讀取異常，改讀 localStorage
+      }
+      try {
+        const raw = window.localStorage.getItem(LS_FALLBACK_PREFIX + key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function saveKeyToBrowserDB(key, value) {
+      try {
+        window.localStorage.setItem(LS_FALLBACK_PREFIX + key, JSON.stringify(value));
+      } catch (e) {
+        // 忽略無痕模式 localStorage 限制
+      }
+      try {
+        const idb = await openBrowserDB();
+        if (!idb) return;
+        await new Promise((resolve) => {
+          const tx = idb.transaction(IDB_STORE, 'readwrite');
+          const store = tx.objectStore(IDB_STORE);
+          store.put(value, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        console.error('寫入食物 IndexedDB 失敗:', e);
+      }
+    }
+
+    async function loadStateFromBrowserDB() {
+      return await loadKeyFromBrowserDB('main');
+    }
+
+    async function saveStateToBrowserDB(triggerGitHubSync = true) {
+      if (isUsingUrlSnapshot || isReadOnlyMode) return;
+      try {
+        lastStateUpdatedAt = Date.now();
+        const payload = {
+          hasInitialized: true,
+          updatedAt: lastStateUpdatedAt,
+          categories: [...categories],
+          items: foodItems.map(normalizeItem)
+        };
+        await saveKeyToBrowserDB('main', payload);
+        hasPersistedDataLoaded = true;
+
+        if (triggerGitHubSync && ghConfig.token) {
+          scheduleGitHubCloudPush();
+        }
+      } catch (e) {
+        console.error('儲存食物至瀏覽器資料庫失敗:', e);
+      }
+    }
+
+    /**********************************************************
+     * GitHub API 雲端自動讀寫（food-data.json）
+     **********************************************************/
+    async function loadGitHubSyncConfigFromDB() {
+      const saved = await loadKeyFromBrowserDB('gh_sync_config');
+      if (saved) {
+        if (saved.owner) ghConfig.owner = saved.owner;
+        if (saved.repo) ghConfig.repo = saved.repo;
+        if (saved.token) ghConfig.token = saved.token;
+      }
+      updateGitHubSyncModalUI();
+    }
+
+    function updateGitHubSyncModalUI() {
+      const ownerEl = document.getElementById('ghOwnerInput');
+      const repoEl = document.getElementById('ghRepoInput');
+      const tokenEl = document.getElementById('ghTokenInput');
+      const badgeEl = document.getElementById('ghAutoSyncBadge');
+      const disconnectBtn = document.getElementById('disconnectGhBtn');
+
+      if (ownerEl) ownerEl.value = ghConfig.owner || 'lzy26362636';
+      if (repoEl) repoEl.value = ghConfig.repo || 'zzstore';
+      if (tokenEl) tokenEl.value = ghConfig.token || '';
+
+      if (badgeEl) {
+        if (ghConfig.token) {
+          badgeEl.textContent = '✅ 已啟用自動雲端同步';
+          badgeEl.style.backgroundColor = '#7EC8E3';
+          if (disconnectBtn) disconnectBtn.classList.remove('hidden');
+        } else {
+          badgeEl.textContent = '尚未綁定金鑰';
+          badgeEl.style.backgroundColor = '#FFFFFF';
+          if (disconnectBtn) disconnectBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    async function fetchRemoteGitHubInventory() {
+      if (!ghConfig.owner || !ghConfig.repo) return null;
+      try {
+        const apiUrl = `https://api.github.com/repos/${encodeURIComponent(ghConfig.owner)}/${encodeURIComponent(ghConfig.repo)}/contents/${GH_DATA_FILENAME}`;
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (ghConfig.token) headers['Authorization'] = `token ${ghConfig.token}`;
+
+        const res = await fetch(apiUrl, { method: 'GET', headers, cache: 'no-store' });
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        if (data && data.sha) ghConfig.fileSha = data.sha;
+        if (data && data.content) {
+          const cleanBase64 = data.content.replace(/\s/g, '');
+          const jsonStr = decodeURIComponent(escape(atob(cleanBase64)));
+          return JSON.parse(jsonStr);
+        }
+      } catch (e) {
+        console.warn('讀取 GitHub 食物雲端庫存失敗:', e);
+      }
+      return null;
+    }
+
+    function scheduleGitHubCloudPush() {
+      if (!ghConfig.token || isReadOnlyMode || isUsingUrlSnapshot) return;
+      setSyncStatus('☁️ 正在自動同步食物至雲端...', '#7EC8E3');
+      clearTimeout(ghSyncDebounceTimer);
+      ghSyncDebounceTimer = setTimeout(() => {
+        pushInventoryToGitHubCloud();
+      }, 600);
+    }
+
+    async function pushInventoryToGitHubCloud() {
+      if (!ghConfig.token || !ghConfig.owner || !ghConfig.repo) return false;
+      if (isPushingToGitHub) {
+        pendingGitHubPush = true;
+        return false;
+      }
+
+      isPushingToGitHub = true;
+      setSyncStatus('☁️ 正在寫入 GitHub 雲端...', '#7EC8E3');
+
+      try {
+        const apiUrl = `https://api.github.com/repos/${encodeURIComponent(ghConfig.owner)}/${encodeURIComponent(ghConfig.repo)}/contents/${GH_DATA_FILENAME}`;
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `token ${ghConfig.token}`,
+          'Content-Type': 'application/json'
+        };
+
+        if (!ghConfig.fileSha) {
+          const checkRes = await fetch(apiUrl, { method: 'GET', headers, cache: 'no-store' });
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            if (checkData && checkData.sha) ghConfig.fileSha = checkData.sha;
+          }
+        }
+
+        const payload = {
+          hasInitialized: true,
+          updatedAt: lastStateUpdatedAt || Date.now(),
+          categories: [...categories],
+          items: foodItems.map(normalizeItem)
+        };
+
+        const encodedContent = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+        const bodyObj = {
+          message: `Auto-sync food inventory (${new Date().toLocaleString('zh-TW')})`,
+          content: encodedContent
+        };
+        if (ghConfig.fileSha) bodyObj.sha = ghConfig.fileSha;
+
+        let putRes = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(bodyObj) });
+
+        if (putRes.status === 409) {
+          const retryCheck = await fetch(apiUrl, { method: 'GET', headers, cache: 'no-store' });
+          if (retryCheck.ok) {
+            const retryData = await retryCheck.json();
+            ghConfig.fileSha = retryData.sha;
+            bodyObj.sha = ghConfig.fileSha;
+            putRes = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(bodyObj) });
+          }
+        }
+
+        if (!putRes.ok) throw new Error(`GitHub API HTTP ${putRes.status}`);
+
+        const putResult = await putRes.json();
+        if (putResult && putResult.content && putResult.content.sha) {
+          ghConfig.fileSha = putResult.content.sha;
+        }
+
+        setSyncStatus('☁️ 食物庫存已自動同步至雲端', '#9AD9F5');
+        isPushingToGitHub = false;
+
+        if (pendingGitHubPush) {
+          pendingGitHubPush = false;
+          pushInventoryToGitHubCloud();
+        }
+        return true;
+      } catch (e) {
+        console.error('自動同步食物至 GitHub 失敗:', e);
+        setSyncStatus('⚠️ 金鑰無效或權限不足（請點右上角☁️檢查）', '#F9B4B8');
+        isPushingToGitHub = false;
+        return false;
+      }
+    }
+
+    async function saveGitHubSyncConfig() {
+      const ownerVal = (document.getElementById('ghOwnerInput')?.value || '').trim() || 'lzy26362636';
+      const repoVal = (document.getElementById('ghRepoInput')?.value || '').trim() || 'zzstore';
+      const tokenVal = (document.getElementById('ghTokenInput')?.value || '').trim();
+
+      if (!tokenVal) {
+        showToast('請先貼上 ghp_ 開頭的 GitHub 金鑰喔！');
+        return;
+      }
+
+      ghConfig.owner = ownerVal;
+      ghConfig.repo = repoVal;
+      ghConfig.token = tokenVal;
+      ghConfig.fileSha = '';
+
+      await saveKeyToBrowserDB('gh_sync_config', {
+        owner: ghConfig.owner,
+        repo: ghConfig.repo,
+        token: ghConfig.token
+      });
+
+      updateGitHubSyncModalUI();
+      showToast('☁️ 正在驗證金鑰並將食物庫存同步上雲端...');
+
+      const ok = await pushInventoryToGitHubCloud();
+      if (ok) {
+        showToast('🎉 綁定成功！以後食物修改都會自動同步到 food-data.json！');
+        closeShareModal();
+      } else {
+        showToast('❌ 同步失敗，請確認 Token 是否有勾選 repo 權限');
+      }
+    }
+
+    async function clearGitHubToken() {
+      ghConfig.token = '';
+      await saveKeyToBrowserDB('gh_sync_config', {
+        owner: ghConfig.owner,
+        repo: ghConfig.repo,
+        token: ''
+      });
+      updateGitHubSyncModalUI();
+      setSyncStatus('💾 本機自動儲存中（點右上角可綁定雲端）', '#9AD9F5');
+      showToast('已解除此裝置的 GitHub 金鑰綁定');
+    }
+
+    function setSyncStatus(text, dotColor = '#9AD9F5') {
+      const dot = document.getElementById('syncStatusDot');
+      const txt = document.getElementById('syncStatusText');
+      if (dot) dot.style.backgroundColor = dotColor;
+      if (txt) txt.textContent = text;
+    }
+
+    function updateReadOnlyUI() {
+      const banner = document.getElementById('readOnlyBanner');
+      const floatBar = document.getElementById('floatingAddBar');
+
+      if (isReadOnlyMode) {
+        if (banner) banner.classList.remove('hidden');
+        if (floatBar) floatBar.classList.add('hidden');
+      } else {
+        if (banner) banner.classList.add('hidden');
+        if (floatBar) floatBar.classList.remove('hidden');
+      }
+    }
+
+    function getOffsetDateString(offsetDays) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + offsetDays);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function normalizeItem(raw) {
+      const stockCount = Math.max(0, Number(raw.stockCount ?? raw.unopenedCount ?? raw.unopened ?? 0));
+
+      return {
+        id: String(raw.id || 'food-' + Date.now()),
+        name: String(raw.name || '未命名食物'),
+        category: String(raw.category || categories[0] || '餅乾/洋芋片'),
+        expiryDate: String(raw.expiryDate || getOffsetDateString(90)),
+        stockCount
+      };
+    }
+
+    function createSampleItems() {
+      return [
+        normalizeItem({
+          id: 'food-sample-1',
+          name: '海苔鹽味厚切洋芋片',
+          category: '餅乾/洋芋片',
+          expiryDate: getOffsetDateString(18),
+          stockCount: 2
+        }),
+        normalizeItem({
+          id: 'food-sample-2',
+          name: '農心辛拉麵（香菇牛肉風味）',
+          category: '泡麵/麵食',
+          expiryDate: getOffsetDateString(58),
+          stockCount: 4
+        }),
+        normalizeItem({
+          id: 'food-sample-3',
+          name: '日本白桃果汁軟糖',
+          category: '糖果/巧克力',
+          expiryDate: getOffsetDateString(75),
+          stockCount: 3
+        }),
+        normalizeItem({
+          id: 'food-sample-4',
+          name: '無糖日式綠茶寶特瓶',
+          category: '飲料/沖泡',
+          expiryDate: getOffsetDateString(210),
+          stockCount: 6
+        })
+      ];
+    }
+
+    async function loadInitialDataAndUrlParams() {
+      await loadGitHubSyncConfigFromDB();
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'view') {
+        isReadOnlyMode = true;
+      }
+
+      const encodedData = params.get('data');
+      if (encodedData) {
+        try {
+          const jsonStr = decodeURIComponent(escape(atob(encodedData)));
+          const parsed = JSON.parse(jsonStr);
+          if (Array.isArray(parsed.items)) {
+            foodItems = parsed.items.map(normalizeItem);
+            if (Array.isArray(parsed.cats) && parsed.cats.length > 0) {
+              categories = parsed.cats;
+            }
+            isUsingUrlSnapshot = true;
+            setSyncStatus('🔗 已載入分享網址食物快照', '#9AD9F5');
+            updateReadOnlyUI();
+            return;
+          }
+        } catch (err) {
+          console.error('解析分享網址快照失敗:', err);
+        }
+      }
+
+      setSyncStatus('☁️ 正在讀取最新食物庫存...', '#BCE6FF');
+      const [savedBrowserState, remoteGitHubData] = await Promise.all([
+        loadStateFromBrowserDB(),
+        fetchRemoteGitHubInventory()
+      ]);
+
+      const localTime = Number(savedBrowserState?.updatedAt || 0);
+      const remoteTime = Number(remoteGitHubData?.updatedAt || 0);
+
+      if (remoteGitHubData && (remoteTime >= localTime || !savedBrowserState?.hasInitialized)) {
+        foodItems = Array.isArray(remoteGitHubData.items)
+          ? remoteGitHubData.items.map(normalizeItem)
+          : [];
+        if (Array.isArray(remoteGitHubData.categories) && remoteGitHubData.categories.length > 0) {
+          categories = remoteGitHubData.categories;
+        }
+        lastStateUpdatedAt = remoteTime || Date.now();
+        hasPersistedDataLoaded = true;
+        await saveStateToBrowserDB(false);
+        setSyncStatus(
+          ghConfig.token
+            ? '☁️ 已連線 GitHub 雲端自動同步'
+            : '☁️ 已載入雲端最新食物庫存',
+          '#9AD9F5'
+        );
+        updateReadOnlyUI();
+        return;
+      }
+
+      if (savedBrowserState && savedBrowserState.hasInitialized) {
+        foodItems = Array.isArray(savedBrowserState.items)
+          ? savedBrowserState.items.map(normalizeItem)
+          : [];
+        if (Array.isArray(savedBrowserState.categories) && savedBrowserState.categories.length > 0) {
+          categories = savedBrowserState.categories;
+        }
+        lastStateUpdatedAt = localTime || Date.now();
+        hasPersistedDataLoaded = true;
+        setSyncStatus(
+          ghConfig.token
+            ? '☁️ 已連線 GitHub 雲端自動同步'
+            : '💾 本機已自動儲存（點右上角☁️可綁定同步）',
+          '#9AD9F5'
+        );
+        if (ghConfig.token && localTime > remoteTime) {
+          scheduleGitHubCloudPush();
+        }
+        updateReadOnlyUI();
+        return;
+      }
+
+      updateReadOnlyUI();
+    }
+
+    async function saveItemToCloud(item) {
+      if (isUsingUrlSnapshot) isUsingUrlSnapshot = false;
+      await saveStateToBrowserDB(true);
+      if (!ghConfig.token) {
+        setSyncStatus('💾 本機已儲存（點右上角☁️可綁定自動雲端同步）', '#9AD9F5');
+      }
+      renderApp();
+    }
+
+    async function deleteItemFromCloud(itemId) {
+      await saveStateToBrowserDB(true);
+      if (!ghConfig.token) {
+        setSyncStatus('💾 已儲存刪除結果', '#9AD9F5');
+      }
+      renderApp();
+    }
+
+    function disableReadOnlyMode() {
+      isReadOnlyMode = false;
+      updateReadOnlyUI();
+      renderApp();
+      showToast('✏️ 已切換為編輯模式！');
+    }
+
+    async function initApp() {
+      // 先立即渲染預設畫面，確保任何時候畫面與按鈕都立即可點擊
+      foodItems = createSampleItems();
+      renderApp();
+
+      try {
+        await loadInitialDataAndUrlParams();
+        if (!isUsingUrlSnapshot && !hasPersistedDataLoaded) {
+          foodItems = createSampleItems();
+          await saveStateToBrowserDB(false);
+        }
+        if (!ghConfig.token && !isUsingUrlSnapshot) {
+          setSyncStatus('💾 自動儲存中（點右上角可分享最新零食網址）', '#9AD9F5');
+        }
+        const uidEl = document.getElementById('currentUserIdDisplay');
+        if (uidEl) uidEl.textContent = '儲存模式：瀏覽器自動儲存＋GitHub雲端同步';
+        renderApp();
+      } catch (err) {
+        console.error('初始化資料異常:', err);
+        renderApp();
+      }
+    }
+
+    async function saveCategoriesToCloud() {
+      await saveStateToBrowserDB(true);
+      renderApp();
+    }
+
+    function getExpiryInfo(expiryDateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const parts = (expiryDateStr || '').split('-');
+      if (parts.length !== 3) {
+        return {
+          daysLeft: 9999,
+          status: 'safe',
+          cardClass: 'card-safe',
+          badgeBg: '#C9EEFA',
+          label: '🧊 效期充裕',
+          isSoonExpiring: false
+        };
+      }
+
+      const expDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      expDate.setHours(0, 0, 0, 0);
+
+      const diffMs = expDate.getTime() - today.getTime();
+      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (daysLeft < 0) {
+        return {
+          daysLeft,
+          status: 'expired',
+          cardClass: 'card-urgent-red',
+          badgeBg: '#FFFFFF',
+          label: `🚨 已過期 ${Math.abs(daysLeft)} 天`,
+          isSoonExpiring: true
+        };
+      } else if (daysLeft === 0) {
+        return {
+          daysLeft,
+          status: 'urgent',
+          cardClass: 'card-urgent-red',
+          badgeBg: '#BCE6FF',
+          label: '🚨 今天到期！快吃',
+          isSoonExpiring: true
+        };
+      } else if (daysLeft <= 31) {
+        return {
+          daysLeft,
+          status: 'urgent',
+          cardClass: 'card-urgent-red',
+          badgeBg: '#BCE6FF',
+          label: `🚨 1個月內（剩 ${daysLeft} 天）`,
+          isSoonExpiring: true
+        };
+      } else if (daysLeft <= 92) {
+        const approxMonths = Math.max(1, Math.round(daysLeft / 30));
+        return {
+          daysLeft,
+          status: 'soon',
+          cardClass: 'card-soon-pink',
+          badgeBg: '#F9B4B8',
+          label: `🌸 3個月內（約 ${approxMonths} 個月/${daysLeft}天）`,
+          isSoonExpiring: true
+        };
+      } else {
+        const approxMonths = Math.round(daysLeft / 30);
+        return {
+          daysLeft,
+          status: 'safe',
+          cardClass: 'card-safe',
+          badgeBg: '#C9EEFA',
+          label: `🧊 安心（剩約 ${approxMonths} 個月）`,
+          isSoonExpiring: false
+        };
+      }
+    }
+
+    function getCategoryStyle(category) {
+      if (category.includes('餅乾') || category.includes('洋芋片')) {
+        return {
+          bg: '#BCE6FF',
+          svg: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="8" fill="#FFFFFF" stroke="#23415A" stroke-width="2.2"/>
+            <circle cx="9.5" cy="10" r="1.2" fill="#23415A"/>
+            <circle cx="14.5" cy="11" r="1.2" fill="#23415A"/>
+            <circle cx="11.5" cy="14.5" r="1.2" fill="#23415A"/>
+          </svg>`
+        };
+      }
+      if (category.includes('糖果') || category.includes('巧克力')) {
+        return {
+          bg: '#9AD9F5',
+          svg: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+            <rect x="7" y="8" width="10" height="8" rx="4" fill="#FFFFFF" stroke="#23415A" stroke-width="2.2"/>
+            <path d="M7 10L3 7V17L7 14M17 10L21 7V17L17 14" stroke="#23415A" stroke-width="2" stroke-linejoin="round"/>
+          </svg>`
+        };
+      }
+      if (category.includes('泡麵') || category.includes('麵')) {
+        return {
+          bg: '#C9EEFA',
+          svg: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+            <path d="M4 12H20C20 16.5 16.5 20 12 20C7.5 20 4 16.5 4 12Z" fill="#7EC8E3" stroke="#23415A" stroke-width="2.2"/>
+            <path d="M8 5V12M12 4V12M16 5V12" stroke="#23415A" stroke-width="2" stroke-linecap="round"/>
+          </svg>`
+        };
+      }
+      if (category.includes('飲料') || category.includes('沖泡')) {
+        return {
+          bg: '#7EC8E3',
+          svg: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+            <rect x="7" y="7" width="10" height="13" rx="2" fill="#FFFFFF" stroke="#23415A" stroke-width="2.2"/>
+            <path d="M12 7L15 3" stroke="#23415A" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>`
+        };
+      }
+      return {
+        bg: '#EAF5FD',
+        svg: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="5" width="14" height="14" rx="4" fill="#9AD9F5" stroke="#23415A" stroke-width="2.2"/>
+          <circle cx="12" cy="12" r="2.5" fill="#FFFFFF" stroke="#23415A" stroke-width="2"/>
+        </svg>`
+      };
+    }
+
+    function switchMainView(view) {
+      currentMainView = view;
+      const tabInv = document.getElementById('tabBtnInventory');
+      const tabExp = document.getElementById('tabBtnExpiring');
+      const invControls = document.getElementById('inventoryControls');
+      const expBanner = document.getElementById('expiringReminderBanner');
+
+      if (view === 'inventory') {
+        tabInv.style.backgroundColor = '#BCE6FF';
+        tabExp.style.backgroundColor = '#FFFFFF';
+        invControls.classList.remove('hidden');
+        expBanner.classList.add('hidden');
+      } else {
+        tabInv.style.backgroundColor = '#FFFFFF';
+        tabExp.style.backgroundColor = '#BCE6FF';
+        invControls.classList.add('hidden');
+        expBanner.classList.remove('hidden');
+      }
+
+      renderApp();
+    }
+
+    function selectCategory(cat) {
+      currentCategoryFilter = cat;
+      renderApp();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      renderApp();
+    }
+
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabsContainer');
+      const allCats = ['全部', ...categories];
+
+      const counts = { '全部': foodItems.length };
+      categories.forEach(c => { counts[c] = 0; });
+      foodItems.forEach(item => {
+        counts[item.category] = (counts[item.category] || 0) + 1;
+      });
+
+      const tabsHtml = allCats.map(cat => {
+        const isActive = currentCategoryFilter === cat;
+        const bg = isActive ? '#7EC8E3' : '#FFFFFF';
+        const count = counts[cat] || 0;
+        return `
+          <button
+            onclick="selectCategory('${escapeHtml(cat)}')"
+            style="background-color: ${bg};"
+            class="ehon-pill px-2.5 py-1 text-xs shrink-0 flex items-center gap-1 transition-transform active:scale-95"
+          >
+            <span>${escapeHtml(cat)}</span>
+            <span class="text-[10px] px-1.5 py-0.1 rounded-full border-2 border-[#23415A] bg-[#FFFFFF]">${count}</span>
+          </button>
+        `;
+      }).join('');
+
+      const manageCatBtnHtml = isReadOnlyMode ? '' : `
+        <button
+          onclick="openCategoryManagerModal()"
+          class="ehon-pill bg-[#C9EEFA] px-2.5 py-1 text-xs shrink-0 flex items-center gap-1 transition-transform active:scale-95"
+        >
+          <span>⚙️管理分類</span>
+        </button>
+      `;
+
+      container.innerHTML = tabsHtml + manageCatBtnHtml;
+    }
+
+    /**********************************************************
+     * 分類管理 Modal：新增、編輯改名、排序、刪除
+     **********************************************************/
+    function openCategoryManagerModal() {
+      if (isReadOnlyMode) return;
+      renderCategoryManagerList();
+      const modal = document.getElementById('categoryManagerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCategoryManagerModal() {
+      const modal = document.getElementById('categoryManagerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      renderApp();
+    }
+
+    function renderCategoryManagerList() {
+      const listEl = document.getElementById('categoryManagerList');
+      if (!listEl) return;
+
+      const counts = {};
+      foodItems.forEach(item => {
+        counts[item.category] = (counts[item.category] || 0) + 1;
+      });
+
+      listEl.innerHTML = categories.map((cat, idx) => {
+        const itemCount = counts[cat] || 0;
+        return `
+          <div class="ehon-box-sm bg-[#EAF5FD] p-2 flex items-center gap-1.5">
+            <div class="flex flex-col gap-0.5 shrink-0">
+              <button
+                type="button"
+                onclick="moveCategoryOrder(${idx}, -1)"
+                ${idx === 0 ? 'disabled style="opacity:0.35"' : ''}
+                class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                title="往上移"
+              >▲</button>
+              <button
+                type="button"
+                onclick="moveCategoryOrder(${idx}, 1)"
+                ${idx === categories.length - 1 ? 'disabled style="opacity:0.35"' : ''}
+                class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                title="往下移"
+              >▼</button>
+            </div>
+
+            <input
+              id="catEditInput_${idx}"
+              type="text"
+              value="${escapeHtml(cat)}"
+              onchange="renameCategoryAt(${idx}, this.value)"
+              class="ehon-input flex-1 text-xs py-1 px-2 bg-[#FFFFFF]"
+              aria-label="分類名稱"
+            />
+
+            <span class="text-[11px] px-1.5 py-0.5 rounded-full border border-[#23415A] bg-[#FFFFFF] shrink-0">
+              ${itemCount}項
+            </span>
+
+            <button
+              type="button"
+              onclick="renameCategoryAt(${idx}, document.getElementById('catEditInput_${idx}').value)"
+              class="ehon-btn bg-[#9AD9F5] px-2 py-1 text-[11px] shrink-0"
+            >改名</button>
+
+            <button
+              type="button"
+              onclick="deleteCategoryAt(${idx})"
+              class="ehon-btn bg-[#F9B4B8] px-2 py-1 text-[11px] shrink-0"
+            >刪除</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addCategoryFromManager() {
+      const input = document.getElementById('newCategoryManagerInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (categories.includes(val)) {
+        showToast('此食物分類名稱已經存在囉！');
+        return;
+      }
+      categories.push(val);
+      input.value = '';
+      renderCategoryManagerList();
+      renderApp();
+      showToast(`✨ 已新增食物分類「${val}」`);
+      await saveCategoriesToCloud();
+    }
+
+    async function renameCategoryAt(index, newNameRaw) {
+      const oldName = categories[index];
+      const newName = (newNameRaw || '').trim();
+      if (!oldName || !newName || oldName === newName) {
+        renderCategoryManagerList();
+        return;
+      }
+      if (categories.some((c, i) => i !== index && c === newName)) {
+        showToast('分類名稱重複，請換一個名稱');
+        renderCategoryManagerList();
+        return;
+      }
+
+      categories[index] = newName;
+      if (currentCategoryFilter === oldName) {
+        currentCategoryFilter = newName;
+      }
+
+      foodItems.forEach(item => {
+        if (item.category === oldName) {
+          item.category = newName;
+        }
+      });
+
+      renderCategoryManagerList();
+      renderApp();
+      showToast(`✏️ 已將「${oldName}」改名為「${newName}」`);
+      await saveCategoriesToCloud();
+    }
+
+    async function moveCategoryOrder(index, delta) {
+      const targetIndex = index + delta;
+      if (targetIndex < 0 || targetIndex >= categories.length) return;
+      const temp = categories[index];
+      categories[index] = categories[targetIndex];
+      categories[targetIndex] = temp;
+      renderCategoryManagerList();
+      renderApp();
+      await saveCategoriesToCloud();
+    }
+
+    async function deleteCategoryAt(index) {
+      const targetCat = categories[index];
+      if (!targetCat) return;
+
+      if (categories.length <= 1) {
+        showToast('至少需要保留 1 個分類喔！');
+        return;
+      }
+
+      categories.splice(index, 1);
+      const fallbackCat = categories[0] || '餅乾/洋芋片';
+      if (!categories.includes(fallbackCat)) {
+        categories.push(fallbackCat);
+      }
+
+      if (currentCategoryFilter === targetCat) {
+        currentCategoryFilter = '全部';
+      }
+
+      let movedCount = 0;
+      foodItems.forEach(item => {
+        if (item.category === targetCat) {
+          item.category = fallbackCat;
+          movedCount++;
+        }
+      });
+
+      renderCategoryManagerList();
+      renderApp();
+
+      if (movedCount > 0) {
+        showToast(`🗑️ 已刪除「${targetCat}」，原食物已移至「${fallbackCat}」`);
+      } else {
+        showToast(`🗑️ 已刪除分類「${targetCat}」`);
+      }
+
+      await saveCategoriesToCloud();
+    }
+
+    /**********************************************************
+     * 卡片庫存數量增減
+     **********************************************************/
+    async function adjustStockCount(itemId, delta) {
+      if (isReadOnlyMode) {
+        showToast('👀 目前為唯讀模式，點上方「切換編輯」即可修改');
+        return;
+      }
+      const item = foodItems.find(i => i.id === itemId);
+      if (!item) return;
+
+      item.stockCount = Math.max(0, (Number(item.stockCount) || 0) + delta);
+      renderApp();
+      await saveItemToCloud(item);
+    }
+
+    function renderApp() {
+      let soonExpiringCount = 0;
+      foodItems.forEach(item => {
+        if (getExpiryInfo(item.expiryDate).isSoonExpiring) {
+          soonExpiringCount += 1;
+        }
+      });
+
+      const invBadge = document.getElementById('inventoryTabBadge');
+      if (invBadge) invBadge.textContent = foodItems.length;
+      document.getElementById('expiringTabBadge').textContent = soonExpiringCount;
+
+      renderCategoryTabs();
+
+      const searchVal = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !searchVal);
+
+      let filtered = [...foodItems];
+
+      if (currentMainView === 'expiring') {
+        filtered = filtered
+          .filter(item => getExpiryInfo(item.expiryDate).isSoonExpiring)
+          .sort((a, b) => (a.expiryDate || '9999-12-31').localeCompare(b.expiryDate || '9999-12-31'));
+      } else {
+        if (currentCategoryFilter !== '全部') {
+          filtered = filtered.filter(item => item.category === currentCategoryFilter);
+        }
+        if (searchVal) {
+          filtered = filtered.filter(item =>
+            (item.name || '').toLowerCase().includes(searchVal) ||
+            (item.category || '').toLowerCase().includes(searchVal)
+          );
+        }
+        filtered.sort((a, b) => (a.expiryDate || '9999-12-31').localeCompare(b.expiryDate || '9999-12-31'));
+      }
+
+      const listContainer = document.getElementById('itemsListContainer');
+      if (filtered.length === 0) {
+        if (currentMainView === 'expiring') {
+          listContainer.innerHTML = `
+            <div class="col-span-full ehon-box bg-[#FFFFFF] p-5 text-center">
+              <div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[#C9EEFA] border-[3px] border-[#23415A] flex items-center justify-center text-lg">✓</div>
+              <div class="text-sm mb-0.5">目前沒有 3 個月內到期的食物</div>
+              <p class="text-xs opacity-75">零食櫃裡的存糧效期都很新鮮喔！</p>
+            </div>
+          `;
+        } else {
+          listContainer.innerHTML = `
+            <div class="col-span-full ehon-box bg-[#FFFFFF] p-5 text-center">
+              <div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-[#BCE6FF] border-[3px] border-[#23415A] flex items-center justify-center text-lg">🍪</div>
+              <div class="text-sm mb-0.5">這個分類目前沒有食物零食喔</div>
+              <p class="text-xs opacity-75">點擊下方「＋新增食物 / 零食品項」開始紀錄您的美食庫存吧！</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map((item, idx) => {
+        const expInfo = getExpiryInfo(item.expiryDate);
+        const catStyle = getCategoryStyle(item.category);
+        const showPriorityRank = currentMainView === 'expiring';
+
+        return `
+          <article class="ehon-box ${expInfo.cardClass} px-3 py-2.5 transition-all flex flex-col justify-between">
+            <div>
+              <!-- 第一列：分類標籤 + 右側編輯刪除 -->
+              <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                <div class="flex items-center gap-1 flex-wrap">
+                  ${showPriorityRank ? `
+                    <span class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#BCE6FF]">
+                      #${idx + 1} 優先吃
+                    </span>
+                  ` : ''}
+                  <span style="background-color: ${catStyle.bg};" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] flex items-center gap-1">
+                    ${catStyle.svg}
+                    <span>${escapeHtml(item.category)}</span>
+                  </span>
+                </div>
+
+                ${isReadOnlyMode ? '' : `
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      onclick="openItemModal('${item.id}')"
+                      class="ehon-btn bg-[#FFFFFF] px-2 py-0.5 text-[11px] rounded-full"
+                      title="編輯食物"
+                    >編輯</button>
+                    <button
+                      onclick="openDeleteModal('${item.id}')"
+                      class="ehon-btn bg-[#FFFFFF] w-6 h-6 text-[11px] rounded-full flex items-center justify-center"
+                      title="刪除食物"
+                    >✕</button>
+                  </div>
+                `}
+              </div>
+
+              <!-- 第二列：食物名稱 -->
+              <div class="mb-1.5">
+                <h3 class="text-base break-words">${escapeHtml(item.name)}</h3>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <!-- 第三列：有效日期與倒數標籤 -->
+              <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1 flex items-center justify-between gap-1 flex-wrap text-xs">
+                <span class="flex items-center gap-1">
+                  <span>🗓️ 效期：<strong>${escapeHtml(item.expiryDate)}</strong></span>
+                </span>
+                <span style="background-color: ${expInfo.badgeBg};" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A]">
+                  ${escapeHtml(expInfo.label)}
+                </span>
+              </div>
+
+              <!-- 第四列：庫存數量 -->
+              <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1.5 flex items-center justify-between">
+                <div class="flex items-baseline gap-1.5">
+                  <span class="text-xs opacity-75">庫存數量：</span>
+                  <span class="text-sm font-bold">${item.stockCount} <span class="text-[11px] font-normal">份</span></span>
+                </div>
+                ${isReadOnlyMode ? '' : `
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      onclick="adjustStockCount('${item.id}', -1)"
+                      class="ehon-btn bg-[#C9EEFA] w-7 h-7 rounded-full text-xs flex items-center justify-center"
+                      aria-label="減少庫存"
+                    >−</button>
+                    <button
+                      onclick="adjustStockCount('${item.id}', 1)"
+                      class="ehon-btn bg-[#C9EEFA] w-7 h-7 rounded-full text-xs flex items-center justify-center"
+                      aria-label="增加庫存"
+                    >＋</button>
+                  </div>
+                `}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    /**********************************************************
+     * 新增 / 編輯食物 Modal 邏輯
+     **********************************************************/
+    function populateCategorySelect(selectedCat) {
+      const select = document.getElementById('itemCategorySelect');
+      if (!select) return;
+      if (!Array.isArray(categories) || categories.length === 0) {
+        categories = [...DEFAULT_CATEGORIES];
+      }
+      select.innerHTML = categories.map(cat => `
+        <option value="${escapeHtml(cat)}" ${cat === selectedCat ? 'selected' : ''}>${escapeHtml(cat)}</option>
+      `).join('');
+    }
+
+    function openItemModal(editId = null) {
+      if (isReadOnlyMode) return;
+      const backdrop = document.getElementById('itemModalBackdrop');
+      const titleEl = document.getElementById('modalTitle');
+      const idInput = document.getElementById('editingItemId');
+      const nameInput = document.getElementById('itemNameInput');
+      const expInput = document.getElementById('itemExpiryInput');
+      const stockInput = document.getElementById('itemStockInput');
+
+      const customBox = document.getElementById('customCategoryBox');
+      if (customBox) customBox.classList.add('hidden');
+
+      if (editId) {
+        const target = foodItems.find(i => i.id === editId);
+        if (!target) return;
+        titleEl.textContent = '編輯食物 / 零食資訊';
+        idInput.value = target.id;
+        nameInput.value = target.name;
+        populateCategorySelect(target.category);
+        expInput.value = target.expiryDate;
+        stockInput.value = target.stockCount;
+      } else {
+        titleEl.textContent = '新增食物 / 零食品項';
+        idInput.value = '';
+        nameInput.value = '';
+        const defaultCat = currentCategoryFilter !== '全部' ? currentCategoryFilter : categories[0];
+        populateCategorySelect(defaultCat);
+        expInput.value = getOffsetDateString(90);
+        stockInput.value = 1;
+      }
+
+      previewModalExpiryBadge();
+      backdrop.classList.remove('hidden');
+      backdrop.classList.add('flex');
+      setTimeout(() => nameInput.focus(), 60);
+    }
+
+    function closeItemModal() {
+      const backdrop = document.getElementById('itemModalBackdrop');
+      backdrop.classList.add('hidden');
+      backdrop.classList.remove('flex');
+    }
+
+    function setQuickExpiryDays(days) {
+      document.getElementById('itemExpiryInput').value = getOffsetDateString(days);
+      previewModalExpiryBadge();
+    }
+
+    function previewModalExpiryBadge() {
+      const dateVal = document.getElementById('itemExpiryInput').value;
+      const previewEl = document.getElementById('modalExpiryPreview');
+      if (!dateVal) {
+        previewEl.style.backgroundColor = '#FFFFFF';
+        previewEl.textContent = '請選擇有效日期';
+        return;
+      }
+      const info = getExpiryInfo(dateVal);
+      if (info.cardClass === 'card-urgent-red') {
+        previewEl.style.backgroundColor = '#F9B4B8';
+        previewEl.textContent = `預覽：紅底色（${info.label}）`;
+      } else if (info.cardClass === 'card-soon-pink') {
+        previewEl.style.backgroundColor = '#FCE4EC';
+        previewEl.textContent = `預覽：粉紅底色（${info.label}）`;
+      } else {
+        previewEl.style.backgroundColor = '#C9EEFA';
+        previewEl.textContent = `預覽：純白底色（${info.label}）`;
+      }
+    }
+
+    function stepFormStock(delta) {
+      const el = document.getElementById('itemStockInput');
+      const current = parseInt(el.value, 10) || 0;
+      el.value = Math.max(0, current + delta);
+    }
+
+    function toggleNewCategoryBox() {
+      const box = document.getElementById('customCategoryBox');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        document.getElementById('customCategoryInput').focus();
+      }
+    }
+
+    async function addCustomCategory() {
+      const input = document.getElementById('customCategoryInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!categories.includes(val)) {
+        categories.push(val);
+        await saveCategoriesToCloud();
+      }
+      populateCategorySelect(val);
+      input.value = '';
+      document.getElementById('customCategoryBox').classList.add('hidden');
+      showToast(`已新增食物分類「${val}」`);
+    }
+
+    async function handleSaveItem(event) {
+      event.preventDefault();
+      const id = document.getElementById('editingItemId').value;
+      const name = document.getElementById('itemNameInput').value.trim();
+      const category = document.getElementById('itemCategorySelect').value || categories[0] || '餅乾/洋芋片';
+      const expiryDate = document.getElementById('itemExpiryInput').value;
+      const stockCount = Math.max(0, parseInt(document.getElementById('itemStockInput').value, 10) || 0);
+
+      if (!name || !expiryDate) {
+        showToast('請填寫食物名稱與有效日期喔！');
+        return;
+      }
+
+      let targetItem = null;
+      if (id) {
+        const idx = foodItems.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          foodItems[idx] = normalizeItem({
+            ...foodItems[idx],
+            name,
+            category,
+            expiryDate,
+            stockCount
+          });
+          targetItem = foodItems[idx];
+        }
+        showToast('已更新食物資訊！');
+      } else {
+        targetItem = normalizeItem({
+          id: 'food-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          name,
+          category,
+          expiryDate,
+          stockCount
+        });
+        foodItems.push(targetItem);
+        // 若目前篩選在別的分類，自動切換至「全部」或該分類，讓使用者立刻看到剛新增的品項
+        if (currentCategoryFilter !== '全部' && currentCategoryFilter !== category) {
+          currentCategoryFilter = category;
+        }
+        showToast(`✨ 已新增「${name}」！`);
+      }
+
+      closeItemModal();
+      renderApp();
+      if (targetItem) await saveItemToCloud(targetItem);
+    }
+
+    /**********************************************************
+     * 刪除確認與分享網址 Modal
+     **********************************************************/
+    function openDeleteModal(itemId) {
+      if (isReadOnlyMode) return;
+      const target = foodItems.find(i => i.id === itemId);
+      if (!target) return;
+      pendingDeleteId = itemId;
+      document.getElementById('deleteConfirmText').textContent = `確定要將「${target.name}」從庫存本中移除嗎？`;
+      const modal = document.getElementById('deleteConfirmModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      document.getElementById('confirmDeleteBtn').onclick = async () => {
+        const delId = pendingDeleteId;
+        foodItems = foodItems.filter(i => i.id !== delId);
+        pendingDeleteId = null;
+        closeDeleteModal();
+        renderApp();
+        showToast('已刪除該食物品項');
+        if (delId) await deleteItemFromCloud(delId);
+      };
+    }
+
+    function closeDeleteModal() {
+      const modal = document.getElementById('deleteConfirmModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openShareModal() {
+      updateGitHubSyncModalUI();
+      const baseUrl = window.location.origin + window.location.pathname;
+      const readOnlyUrl = `${baseUrl}?mode=view`;
+      const editUrl = baseUrl;
+
+      document.getElementById('shareReadOnlyUrlInput').value = readOnlyUrl;
+      document.getElementById('shareEditUrlInput').value = editUrl;
+
+      try {
+        const snapshotPayload = JSON.stringify({
+          cats: categories,
+          items: foodItems
+        });
+        const encoded = btoa(unescape(encodeURIComponent(snapshotPayload)));
+        document.getElementById('shareSnapshotUrlInput').value = `${baseUrl}?mode=view&data=${encoded}`;
+      } catch (e) {
+        document.getElementById('shareSnapshotUrlInput').value = readOnlyUrl;
+      }
+
+      const modal = document.getElementById('shareModalBackdrop');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeShareModal() {
+      const modal = document.getElementById('shareModalBackdrop');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyInputUrl(inputId, successMsg) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      showToast(successMsg);
+    }
+
+    async function clearAllItemsData() {
+      isUsingUrlSnapshot = false;
+      hasPersistedDataLoaded = true;
+      foodItems = [];
+      await saveStateToBrowserDB(true);
+      closeShareModal();
+      renderApp();
+      showToast('🗑️ 已清空所有食物！現在可以開始輸入您的零食庫存');
+    }
+
+    async function resetToSampleData() {
+      isUsingUrlSnapshot = false;
+      categories = [...DEFAULT_CATEGORIES];
+      foodItems = createSampleItems();
+      await saveStateToBrowserDB(true);
+      closeShareModal();
+      renderApp();
+      showToast('已還原預設食物範例資料！');
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2400);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // 啟動應用程式
+    initApp();
+  </script>
+</body>
+</html>
