@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795355487213,
+  "updatedAt": 1795355496170,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -109,7 +109,7 @@
     },
     {
       "id": "food-1795352589503-3791",
-      "name": "日本狄之月蛋糕",
+      "name": "日本狄之月蛋糕（抽屜櫃2）",
       "category": "餅乾/洋芋片",
       "expiryDate": "2026-11-16",
       "stockCount": 3,
