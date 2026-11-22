@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795358311209,
+  "updatedAt": 1795358314917,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -447,7 +447,7 @@
     {
       "id": "food-1795354025963-z9jf",
       "name": "萬歲牌總匯料理包",
-      "category": "餅乾/洋芋片",
+      "category": "堅果/果乾",
       "location": "零食櫃4",
       "expiryDate": "2027-04-11",
       "stockCount": 3,
