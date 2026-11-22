@@ -291,12 +291,12 @@
         <input
           id="newCategoryManagerInput"
           type="text"
-          placeholder="輸入新分類（如：巧克力、堅果、冷凍食品）"
+          placeholder="輸入新分類（如：巧克力、堅果）"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addCategoryFromManager();}"
-          class="ehon-input flex-1 text-xs py-1.5 bg-[#FFFFFF]"
+          class="ehon-input flex-1 min-w-0 text-xs py-1.5 bg-[#FFFFFF]"
         />
-        <button type="button" onclick="addCategoryFromManager()" class="ehon-btn bg-[#7EC8E3] px-3 py-1.5 text-xs shrink-0">
-          ＋新增分類
+        <button type="button" onclick="addCategoryFromManager()" class="ehon-btn bg-[#7EC8E3] px-2.5 py-1.5 text-xs shrink-0">
+          ＋新增
         </button>
       </div>
 
@@ -304,7 +304,7 @@
         💡 點擊分類名稱可<strong>直接修改名稱</strong>（該分類下的食物會自動同步更新名稱）；點 <strong>▲ ▼</strong> 可調整順序。
       </p>
 
-      <div id="categoryManagerList" class="space-y-1.5 overflow-y-auto pr-0.5 flex-1"></div>
+      <div id="categoryManagerList" class="space-y-2 overflow-y-auto pr-0.5 flex-1"></div>
 
       <div class="pt-2.5 mt-2.5 border-t-2 border-dashed border-[#23415A] flex justify-end">
         <button type="button" onclick="closeCategoryManagerModal()" class="ehon-btn bg-[#BCE6FF] px-5 py-1.5 text-xs">
@@ -1342,48 +1342,56 @@
       listEl.innerHTML = categories.map((cat, idx) => {
         const itemCount = counts[cat] || 0;
         return `
-          <div class="ehon-box-sm bg-[#EAF5FD] p-2 flex items-center gap-1.5">
-            <div class="flex flex-col gap-0.5 shrink-0">
-              <button
-                type="button"
-                onclick="moveCategoryOrder(${idx}, -1)"
-                ${idx === 0 ? 'disabled style="opacity:0.35"' : ''}
-                class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
-                title="往上移"
-              >▲</button>
-              <button
-                type="button"
-                onclick="moveCategoryOrder(${idx}, 1)"
-                ${idx === categories.length - 1 ? 'disabled style="opacity:0.35"' : ''}
-                class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
-                title="往下移"
-              >▼</button>
+          <div class="ehon-box-sm bg-[#EAF5FD] p-2 space-y-1.5">
+            <!-- 第一排：上下排序 + 可完整顯示的分類名稱輸入框 -->
+            <div class="flex items-center gap-1.5">
+              <div class="flex flex-col gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onclick="moveCategoryOrder(${idx}, -1)"
+                  ${idx === 0 ? 'disabled style="opacity:0.35"' : ''}
+                  class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                  title="往上移"
+                >▲</button>
+                <button
+                  type="button"
+                  onclick="moveCategoryOrder(${idx}, 1)"
+                  ${idx === categories.length - 1 ? 'disabled style="opacity:0.35"' : ''}
+                  class="w-5 h-4 rounded border border-[#23415A] bg-[#FFFFFF] text-[10px] flex items-center justify-center"
+                  title="往下移"
+                >▼</button>
+              </div>
+
+              <input
+                id="catEditInput_${idx}"
+                type="text"
+                value="${escapeHtml(cat)}"
+                onchange="renameCategoryAt(${idx}, this.value)"
+                class="ehon-input flex-1 min-w-0 text-xs py-1.5 px-2.5 bg-[#FFFFFF]"
+                aria-label="分類名稱"
+              />
             </div>
 
-            <input
-              id="catEditInput_${idx}"
-              type="text"
-              value="${escapeHtml(cat)}"
-              onchange="renameCategoryAt(${idx}, this.value)"
-              class="ehon-input flex-1 text-xs py-1 px-2 bg-[#FFFFFF]"
-              aria-label="分類名稱"
-            />
+            <!-- 第二排：品項數量 + 改名與刪除按鈕 -->
+            <div class="flex items-center justify-between gap-1.5 pl-6">
+              <span class="text-[11px] px-2 py-0.5 rounded-full border border-[#23415A] bg-[#FFFFFF]">
+                目前 ${itemCount} 項
+              </span>
 
-            <span class="text-[11px] px-1.5 py-0.5 rounded-full border border-[#23415A] bg-[#FFFFFF] shrink-0">
-              ${itemCount}項
-            </span>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onclick="renameCategoryAt(${idx}, document.getElementById('catEditInput_${idx}').value)"
+                  class="ehon-btn bg-[#9AD9F5] px-2.5 py-1 text-[11px]"
+                >改名</button>
 
-            <button
-              type="button"
-              onclick="renameCategoryAt(${idx}, document.getElementById('catEditInput_${idx}').value)"
-              class="ehon-btn bg-[#9AD9F5] px-2 py-1 text-[11px] shrink-0"
-            >改名</button>
-
-            <button
-              type="button"
-              onclick="deleteCategoryAt(${idx})"
-              class="ehon-btn bg-[#F9B4B8] px-2 py-1 text-[11px] shrink-0"
-            >刪除</button>
+                <button
+                  type="button"
+                  onclick="deleteCategoryAt(${idx})"
+                  class="ehon-btn bg-[#F9B4B8] px-2.5 py-1 text-[11px]"
+                >刪除</button>
+              </div>
+            </div>
           </div>
         `;
       }).join('');
