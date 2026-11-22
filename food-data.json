@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795355390730,
+  "updatedAt": 1795355410497,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -261,7 +261,7 @@
     },
     {
       "id": "food-1795353483426-iwfz",
-      "name": "乳加巧克力",
+      "name": "乳加巧克力（抽屜櫃4）",
       "category": "糖果/巧克力",
       "expiryDate": "2026-10-21",
       "stockCount": 2,
