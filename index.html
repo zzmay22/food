@@ -328,6 +328,36 @@
       <form id="itemForm" onsubmit="handleSaveItem(event)" class="space-y-2.5">
         <input type="hidden" id="editingItemId" />
 
+        <!-- 品項照片（選填，自動壓縮以利本機與雲端同步） -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs">品項照片 <span class="text-[10px] bg-[#EAF5FD] px-1.5 py-0.2 rounded border border-[#23415A]">選填</span></label>
+            <button type="button" id="removeItemPhotoBtn" onclick="clearModalItemPhoto()" class="hidden text-[11px] underline text-[#C93B3B]">移除照片</button>
+          </div>
+          <div class="ehon-box-sm bg-[#FFFFFF] p-2 flex items-center gap-2.5">
+            <div id="modalPhotoPreviewBox" class="w-14 h-14 rounded-xl bg-[#EAF5FD] border-2 border-[#23415A] flex items-center justify-center shrink-0 overflow-hidden text-lg">
+              📷
+            </div>
+            <div class="flex-1 min-w-0">
+              <input
+                id="itemPhotoInput"
+                type="file"
+                accept="image/*"
+                onchange="handlePhotoFileChange(event)"
+                class="hidden"
+              />
+              <button
+                type="button"
+                onclick="document.getElementById('itemPhotoInput').click()"
+                class="ehon-btn bg-[#C9EEFA] px-3 py-1.5 text-xs inline-flex items-center gap-1"
+              >
+                <span>🖼️ 選擇 / 拍攝照片</span>
+              </button>
+              <p class="text-[10px] opacity-70 mt-1">可不上傳；若上傳會自動壓縮成輕量縮圖。</p>
+            </div>
+          </div>
+        </div>
+
         <!-- 品名 -->
         <div>
           <label class="block text-xs mb-1" for="itemNameInput">食物名稱 / 口味 <span class="text-[10px] bg-[#BCE6FF] px-1.5 py-0.2 rounded border border-[#23415A]">必填</span></label>
@@ -547,6 +577,7 @@
     let isUsingUrlSnapshot = false;
     let hasPersistedDataLoaded = false;
     let lastStateUpdatedAt = 0;
+    let modalTempPhotoDataUrl = '';
 
     // GitHub 雲端自動同步設定（使用獨立檔案 food-data.json，不干擾保養品）
     let ghConfig = {
@@ -899,7 +930,8 @@
         name: String(raw.name || '未命名食物'),
         category: String(raw.category || categories[0] || '餅乾/洋芋片'),
         expiryDate: String(raw.expiryDate || getOffsetDateString(90)),
-        stockCount
+        stockCount,
+        imageDataUrl: typeof raw.imageDataUrl === 'string' ? raw.imageDataUrl : ''
       };
     }
 
@@ -1547,9 +1579,17 @@
                 `}
               </div>
 
-              <!-- 第二列：食物名稱 -->
-              <div class="mb-1.5">
-                <h3 class="text-base break-words">${escapeHtml(item.name)}</h3>
+              <!-- 第二列：左側食物名稱，右側縮圖照片（若有上傳） -->
+              <div class="flex items-center justify-between gap-2.5 mb-1.5">
+                <h3 class="text-base break-words flex-1 min-w-0">${escapeHtml(item.name)}</h3>
+                ${item.imageDataUrl ? `
+                  <img
+                    src="${item.imageDataUrl}"
+                    alt="${escapeHtml(item.name)}"
+                    class="w-14 h-14 rounded-xl border-2 border-[#23415A] object-cover shrink-0 bg-[#EAF5FD]"
+                    onerror="this.style.display='none'"
+                  />
+                ` : ''}
               </div>
             </div>
 
@@ -1616,6 +1656,8 @@
 
       const customBox = document.getElementById('customCategoryBox');
       if (customBox) customBox.classList.add('hidden');
+      const photoFileInput = document.getElementById('itemPhotoInput');
+      if (photoFileInput) photoFileInput.value = '';
 
       if (editId) {
         const target = foodItems.find(i => i.id === editId);
@@ -1626,6 +1668,7 @@
         populateCategorySelect(target.category);
         expInput.value = target.expiryDate;
         stockInput.value = target.stockCount;
+        modalTempPhotoDataUrl = target.imageDataUrl || '';
       } else {
         titleEl.textContent = '新增食物 / 零食品項';
         idInput.value = '';
@@ -1634,12 +1677,75 @@
         populateCategorySelect(defaultCat);
         expInput.value = getOffsetDateString(90);
         stockInput.value = 1;
+        modalTempPhotoDataUrl = '';
       }
 
+      updateModalPhotoPreview();
       previewModalExpiryBadge();
       backdrop.classList.remove('hidden');
       backdrop.classList.add('flex');
       setTimeout(() => nameInput.focus(), 60);
+    }
+
+    function updateModalPhotoPreview() {
+      const box = document.getElementById('modalPhotoPreviewBox');
+      const removeBtn = document.getElementById('removeItemPhotoBtn');
+      if (!box) return;
+      if (modalTempPhotoDataUrl) {
+        box.innerHTML = `<img src="${modalTempPhotoDataUrl}" alt="預覽照片" class="w-full h-full object-cover" />`;
+        if (removeBtn) removeBtn.classList.remove('hidden');
+      } else {
+        box.innerHTML = '📷';
+        if (removeBtn) removeBtn.classList.add('hidden');
+      }
+    }
+
+    function clearModalItemPhoto() {
+      modalTempPhotoDataUrl = '';
+      const photoFileInput = document.getElementById('itemPhotoInput');
+      if (photoFileInput) photoFileInput.value = '';
+      updateModalPhotoPreview();
+    }
+
+    function handlePhotoFileChange(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('請選擇圖片格式的檔案喔！');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxSide = 320;
+          let width = img.width;
+          let height = img.height;
+          if (width > height && width > maxSide) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else if (height >= width && height > maxSide) {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          modalTempPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          updateModalPhotoPreview();
+          showToast('📸 照片已壓縮並載入！');
+        };
+        img.onerror = () => {
+          showToast('讀取圖片失敗，請換一張試試看');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function closeItemModal() {
@@ -1724,7 +1830,8 @@
             name,
             category,
             expiryDate,
-            stockCount
+            stockCount,
+            imageDataUrl: modalTempPhotoDataUrl
           });
           targetItem = foodItems[idx];
         }
@@ -1735,7 +1842,8 @@
           name,
           category,
           expiryDate,
-          stockCount
+          stockCount,
+          imageDataUrl: modalTempPhotoDataUrl
         });
         foodItems.push(targetItem);
         // 若目前篩選在別的分類，自動切換至「全部」或該分類，讓使用者立刻看到剛新增的品項
@@ -1792,7 +1900,7 @@
       try {
         const snapshotPayload = JSON.stringify({
           cats: categories,
-          items: foodItems
+          items: foodItems.map(({ imageDataUrl, ...rest }) => rest)
         });
         const encoded = btoa(unescape(encodeURIComponent(snapshotPayload)));
         document.getElementById('shareSnapshotUrlInput').value = `${baseUrl}?mode=view&data=${encoded}`;
