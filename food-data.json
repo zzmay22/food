@@ -1,6 +1,6 @@
 {
   "hasInitialized": true,
-  "updatedAt": 1795355410497,
+  "updatedAt": 1795355421507,
   "categories": [
     "餅乾/洋芋片",
     "糖果/巧克力",
@@ -421,7 +421,7 @@
     },
     {
       "id": "food-1795354164197-aa8z",
-      "name": "不知名餅乾（4號抽屜櫃）",
+      "name": "不知名餅乾（抽屜櫃4）",
       "category": "餅乾/洋芋片",
       "expiryDate": "2025-11-29",
       "stockCount": 10,
