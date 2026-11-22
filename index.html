@@ -1167,17 +1167,16 @@
           status: 'urgent',
           cardClass: 'card-urgent-red',
           badgeBg: '#BCE6FF',
-          label: `🚨 1個月內（剩 ${daysLeft} 天）`,
+          label: `🚨 剩 ${daysLeft} 天`,
           isSoonExpiring: true
         };
       } else if (daysLeft <= 92) {
-        const approxMonths = Math.max(1, Math.round(daysLeft / 30));
         return {
           daysLeft,
           status: 'soon',
           cardClass: 'card-soon-pink',
           badgeBg: '#F9B4B8',
-          label: `🌸 3個月內（約 ${approxMonths} 個月/${daysLeft}天）`,
+          label: `🌸 剩 ${daysLeft} 天`,
           isSoonExpiring: true
         };
       } else {
@@ -1585,7 +1584,7 @@
           <article class="ehon-box ${expInfo.cardClass} px-3 py-2.5 transition-all flex flex-col justify-between">
             <div>
               <!-- 第一列：分類標籤 + 右側編輯刪除 -->
-              <div class="flex items-center justify-between gap-1.5 mb-1.5">
+              <div class="flex items-center justify-between gap-1.5 mb-2">
                 <div class="flex items-center gap-1 flex-wrap">
                   ${showPriorityRank ? `
                     <span class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A] bg-[#BCE6FF]">
@@ -1614,52 +1613,54 @@
                 `}
               </div>
 
-              <!-- 第二列：左側食物名稱，右側縮圖照片（若有上傳） -->
-              <div class="flex items-center justify-between gap-2.5 mb-1.5">
-                <h3 class="text-base break-words flex-1 min-w-0">${escapeHtml(item.name)}</h3>
+              <!-- 中間區塊：左側「品名 + 縮小面積的庫存框(藍框)」，右側「放大圖片區(黃框)」 -->
+              <div class="flex items-stretch justify-between gap-2.5 mb-2">
+                <div class="flex-1 min-w-0 flex flex-col justify-between gap-1.5">
+                  <h3 class="text-base break-words">${escapeHtml(item.name)}</h3>
+
+                  <!-- 藍框位置：緊湊版庫存數量 -->
+                  <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1 flex items-center justify-between gap-1.5">
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-[11px] opacity-75">庫存：</span>
+                      <span class="text-sm font-bold">${item.stockCount}<span class="text-[11px] font-normal ml-0.5">份</span></span>
+                    </div>
+                    ${isReadOnlyMode ? '' : `
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button
+                          onclick="adjustStockCount('${item.id}', -1)"
+                          class="ehon-btn bg-[#C9EEFA] w-6 h-6 rounded-full text-xs flex items-center justify-center"
+                          aria-label="減少庫存"
+                        >−</button>
+                        <button
+                          onclick="adjustStockCount('${item.id}', 1)"
+                          class="ehon-btn bg-[#C9EEFA] w-6 h-6 rounded-full text-xs flex items-center justify-center"
+                          aria-label="增加庫存"
+                        >＋</button>
+                      </div>
+                    `}
+                  </div>
+                </div>
+
+                <!-- 黃框位置：放大後的品項照片區 -->
                 ${item.imageDataUrl ? `
                   <img
                     src="${item.imageDataUrl}"
                     alt="${escapeHtml(item.name)}"
-                    class="w-14 h-14 rounded-xl border-2 border-[#23415A] object-cover shrink-0 bg-[#EAF5FD]"
+                    class="w-20 h-20 rounded-2xl border-[3px] border-[#23415A] object-cover shrink-0 bg-[#EAF5FD] self-center"
                     onerror="this.style.display='none'"
                   />
                 ` : ''}
               </div>
             </div>
 
-            <div class="space-y-1.5">
-              <!-- 第三列：有效日期與倒數標籤 -->
-              <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1 flex items-center justify-between gap-1 flex-wrap text-xs">
-                <span class="flex items-center gap-1">
-                  <span>🗓️ 效期：<strong>${escapeHtml(item.expiryDate)}</strong></span>
-                </span>
-                <span style="background-color: ${expInfo.badgeBg};" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A]">
-                  ${escapeHtml(expInfo.label)}
-                </span>
-              </div>
-
-              <!-- 第四列：庫存數量 -->
-              <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1.5 flex items-center justify-between">
-                <div class="flex items-baseline gap-1.5">
-                  <span class="text-xs opacity-75">庫存數量：</span>
-                  <span class="text-sm font-bold">${item.stockCount} <span class="text-[11px] font-normal">份</span></span>
-                </div>
-                ${isReadOnlyMode ? '' : `
-                  <div class="flex items-center gap-1.5">
-                    <button
-                      onclick="adjustStockCount('${item.id}', -1)"
-                      class="ehon-btn bg-[#C9EEFA] w-7 h-7 rounded-full text-xs flex items-center justify-center"
-                      aria-label="減少庫存"
-                    >−</button>
-                    <button
-                      onclick="adjustStockCount('${item.id}', 1)"
-                      class="ehon-btn bg-[#C9EEFA] w-7 h-7 rounded-full text-xs flex items-center justify-center"
-                      aria-label="增加庫存"
-                    >＋</button>
-                  </div>
-                `}
-              </div>
+            <!-- 酒紅框位置（卡片底部全寬）：有效日期與倒數標籤 -->
+            <div class="ehon-box-sm bg-[#FFFFFF] px-2.5 py-1.5 flex items-center justify-between gap-1 flex-wrap text-xs">
+              <span class="flex items-center gap-1">
+                <span>🗓️ 效期：<strong>${escapeHtml(item.expiryDate)}</strong></span>
+              </span>
+              <span style="background-color: ${expInfo.badgeBg};" class="px-2 py-0.2 text-[11px] rounded-full border-2 border-[#23415A]">
+                ${escapeHtml(expInfo.label)}
+              </span>
             </div>
           </article>
         `;
